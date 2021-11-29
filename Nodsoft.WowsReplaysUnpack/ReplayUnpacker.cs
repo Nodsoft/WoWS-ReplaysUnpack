@@ -163,7 +163,7 @@ public class ReplayUnpacker
 					em.Data.Value.Read(bMessageContent);
 					string messageContent = Encoding.UTF8.GetString(bMessageContent);
 
-					replay.ChatMessages.Add(new(entityId, messageGroup, messageContent));
+					replay.ChatMessages.Add(new(entityId, messageGroup, messageContent, replay));
 					/*
 						615476 : battle_team : cv run
 						615474 : battle_common : nb
