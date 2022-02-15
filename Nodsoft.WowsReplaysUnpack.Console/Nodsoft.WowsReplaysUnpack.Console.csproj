@@ -19,6 +19,9 @@
     <None Update="sampleData\*.wowsreplay">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="sampleData\10.10.wowsreplay">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

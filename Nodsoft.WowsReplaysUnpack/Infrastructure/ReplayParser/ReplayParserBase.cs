@@ -74,6 +74,19 @@ public abstract class ReplayParserBase : IReplayParser
 					replay.ChatMessages.Add(ParseChatMessagePacket(em));
 				}
 			}
+			else if (np.Type is GlobalConstants.ReplayPacketTypes.OnEntityCreate)
+			{
+				EntityCreate ec = new(np.RawData);
+				Entity entity = new(ec.EntityId);
+				MemoryStream values = ec.State.Value;
+				byte[] bValuesCount = new byte[1];
+				values.Read(bValuesCount);
+				int valuesCount = bValuesCount[0];
+				for (int i = 0; i < valuesCount; i++)
+				{
+					int idx = values.ReadByte();
+				}
+			}
 		}
 
 		return replay;

@@ -10,7 +10,7 @@ using System;
 
 Console.WriteLine();
 
-
+/*
 BenchmarkRunner.Run<UnpackBenchmark>(DefaultConfig.Instance
 	.WithOptions(ConfigOptions.DisableOptimizationsValidator)
 	.AddJob(Job.Default.WithRuntime(CoreRuntime.Core50))
@@ -19,7 +19,7 @@ BenchmarkRunner.Run<UnpackBenchmark>(DefaultConfig.Instance
 
 /**/
 
-/*
+
 ReplayRaw replay = new UnpackBenchmark().GetReplay();
 
 /**/
