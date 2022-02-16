@@ -17,6 +17,6 @@ public sealed record ReplayMetadata
 	public ArenaInfo ArenaInfo { get; internal init; } = default!;
 	
 	internal byte[] BReplaySignature { get; init; } = Array.Empty<byte>();
-	internal byte[] BReplayBlockCount { get; init; } = Array.Empty<byte>();
-	internal byte[] BReplayBlockSize { get; init; } = Array.Empty<byte>();
+	internal int ReplayBlockCount { get; init; }
+	internal int ReplayBlockSize { get; init; }
 }

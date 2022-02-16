@@ -17,10 +17,10 @@ public interface IReplayParser
 	/// <summary>
 	/// Parses a replay file from a memory stream.
 	/// </summary>
-	/// <param name="memStream">The <see cref="MemoryStream"/> containing the replay file content.</param>
+	/// <param name="decompressedData">The <see cref="MemoryStream"/> containing the decrypted and decompressed replay file content.</param>
 	/// <param name="replayMetadata">An object containing metadata for the replay.</param>
 	/// <returns>The populated <see cref="ReplayRaw"/> object.</returns>
-	public ReplayRaw ParseReplay(MemoryStream memStream, ReplayMetadata replayMetadata);
+	public ReplayRaw ParseReplay(MemoryStream decompressedData, ReplayMetadata replayMetadata);
 
 	public ReplayPlayer ParseReplayPlayer(ArrayList playerInfo);
 

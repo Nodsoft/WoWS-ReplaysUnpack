@@ -4,6 +4,7 @@ using Nodsoft.WowsReplaysUnpack.Infrastructure.Exceptions;
 using Nodsoft.WowsReplaysUnpack.Infrastructure.ReplayParser;
 using System;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -54,6 +55,8 @@ public class ReplayUnpacker
 		int jsonDataSize = BitConverter.ToInt32(bReplayBlockSize, 0);
 		byte[] bReplayJsonData = new byte[jsonDataSize];
 		stream.Read(bReplayJsonData, 0, jsonDataSize);
+		int blockCount = BitConverter.ToInt32(bReplayBlockCount);
+		int blockSize = BitConverter.ToInt32(bReplayBlockSize);
 
 		JsonSerializerOptions options = new() { PropertyNameCaseInsensitive = true };
 		options.Converters.Add(new DateTimeJsonConverter());
@@ -62,19 +65,67 @@ public class ReplayUnpacker
 		{
 			ArenaInfo = JsonSerializer.Deserialize<ArenaInfo>(ref reader, options) ?? throw new InvalidReplayException(),
 			BReplaySignature = bReplaySignature,
-			BReplayBlockCount = bReplayBlockCount,
-			BReplayBlockSize = bReplayBlockSize,
+			ReplayBlockCount = blockCount,
+			ReplayBlockSize = blockSize,
 		};
+
+		// Read through extra data
+		for (int i = 0; i < blockCount - 1; i++)
+		{
+			byte[] bBlockSize = new byte[4];
+			stream.Read(bBlockSize);
+			int extraBlockSize = BitConverter.ToInt32(bBlockSize);
+			byte[] bData = new byte[extraBlockSize];
+			stream.Read(bData);
+		}
+
+		using MemoryStream memoryStream = new();
+		stream.CopyTo(memoryStream);
+		MemoryStream decryptedData = DecryptAndDecompressData(memoryStream);
 
 		Version replayVersion = Version.Parse(string.Join('.', metadata.ArenaInfo.ClientVersionFromExe.Split(',')[..3]));
 		IReplayParser replayParser = parserProvider.FromReplayVersion(replayVersion);
-
-		using MemoryStream memStream = new();
-		stream.CopyTo(memStream);
-		ReplayRaw replay = replayParser.ParseReplay(memStream, metadata);
+		
+		ReplayRaw replay = replayParser.ParseReplay(decryptedData, metadata);
 
 		return replay;
 	}
 
+	private MemoryStream DecryptAndDecompressData(Stream dirtyData)
+	{
+		byte[] byteBlowfishKey = GlobalConstants.BlowfishKey.Select(Convert.ToByte).ToArray();
+		Blowfish blowfish = new(byteBlowfishKey);
+		long prev = 0;
 
+		using MemoryStream compressedData = new();
+		dirtyData.Seek(8, SeekOrigin.Begin);
+
+		foreach (byte[] chunk in Utilities.ChunkData(dirtyData))
+		{
+			try
+			{
+				long decryptedBlock = BitConverter.ToInt64(blowfish.Decrypt_ECB(chunk));
+
+				if (prev is not 0)
+				{
+					decryptedBlock ^= prev;
+				}
+
+				prev = decryptedBlock;
+				compressedData.Write(BitConverter.GetBytes(decryptedBlock));
+			}
+			catch (ArgumentOutOfRangeException) { }
+		}
+		
+		compressedData.Seek(2, SeekOrigin.Begin); //DeflateStream doesn't strip the header so we strip it manually.
+		MemoryStream decompressedData = new();
+
+		using (DeflateStream df = new(compressedData, CompressionMode.Decompress))
+		{
+			df.CopyTo(decompressedData);
+		}
+
+		decompressedData.Seek(0, SeekOrigin.Begin);
+		return decompressedData;
+	}
 }

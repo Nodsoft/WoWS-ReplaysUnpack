@@ -6,7 +6,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -20,42 +19,8 @@ public abstract class ReplayParserBase : IReplayParser
 {
 	protected static readonly PropertyInfo[] _replayPlayerProperties = typeof(ReplayPlayer).GetProperties();
 
-	public virtual ReplayRaw ParseReplay(MemoryStream memStream, ReplayMetadata replayMetadata)
+	public virtual ReplayRaw ParseReplay(MemoryStream decompressedData, ReplayMetadata replayMetadata)
 	{
-		byte[] byteBlowfishKey = GlobalConstants.BlowfishKey.Select(Convert.ToByte).ToArray();
-		Blowfish blowfish = new(byteBlowfishKey);
-		long prev = 0;
-
-		using MemoryStream compressedData = new();
-		memStream.Seek(8, SeekOrigin.Begin);
-
-		foreach (byte[] chunk in Utilities.ChunkData(memStream))
-		{
-			try
-			{
-				long decryptedBlock = BitConverter.ToInt64(blowfish.Decrypt_ECB(chunk));
-
-				if (prev is not 0)
-				{
-					decryptedBlock ^= prev;
-				}
-
-				prev = decryptedBlock;
-				compressedData.Write(BitConverter.GetBytes(decryptedBlock));
-			}
-			catch (ArgumentOutOfRangeException) { }
-		}
-
-		compressedData.Seek(2, SeekOrigin.Begin); //DeflateStream doesn't strip the header so we strip it manually.
-		MemoryStream decompressedData = new();
-
-		using (DeflateStream df = new(compressedData, CompressionMode.Decompress))
-		{
-			df.CopyTo(decompressedData);
-		}
-
-		decompressedData.Seek(0, SeekOrigin.Begin);
-
 		ReplayRaw replay = new(replayMetadata);
 		while (decompressedData.Position != decompressedData.Length)
 		{
