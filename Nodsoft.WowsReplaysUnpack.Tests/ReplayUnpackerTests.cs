@@ -30,6 +30,7 @@ public sealed class ReplayUnpackerTests
 		InlineData("0.11.2.wowsreplay"),
 		InlineData("12.6.wowsreplay"),
 		InlineData("12.7.wowsreplay"),
+		InlineData("12.8.wowsreplay"),
 	]
 	public void TestReplay_Pass(string replayPath)
 	{
