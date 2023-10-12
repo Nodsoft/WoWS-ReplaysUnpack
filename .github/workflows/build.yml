@@ -1,9 +1,10 @@
 name: .NET Build & Test
 
 on:
-  - push
-  - pull_request
-  - workflow_call
+  push:
+  pull_request:
+  workflow_call:
+  workflow_dispatch:
 
 jobs:
   build:
@@ -20,7 +21,7 @@ jobs:
       with:
         dotnet-version: 6.0.x
 
-    - uses: dotnet/nbgv@main
+    - uses: dotnet/nbgv@v0.4.1
       id: nbgv
 
     - name: Restore dependencies

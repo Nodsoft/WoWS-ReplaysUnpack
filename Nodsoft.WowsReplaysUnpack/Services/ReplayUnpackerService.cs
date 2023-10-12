@@ -8,6 +8,7 @@ using Nodsoft.WowsReplaysUnpack.Core.Network.Packets;
 using System.IO.Compression;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 
 namespace Nodsoft.WowsReplaysUnpack.Services;
 
@@ -21,6 +22,7 @@ public sealed class ReplayUnpackerService<TController> : ReplayUnpackerService, 
 	private readonly JsonSerializerOptions _jsonSerializerOptions = new() { PropertyNameCaseInsensitive = true };
 	private readonly IReplayDataParser _replayDataParser;
 	private readonly IReplayController _replayController;
+	private static readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1);
 
 	public ReplayUnpackerService(IReplayDataParser replayDataParser, TController replayController)
 	{
@@ -69,12 +71,13 @@ public sealed class ReplayUnpackerService<TController> : ReplayUnpackerService, 
 		See http://wiki.vbaddict.net/pages/File_Replays for more details.
 		*/
 		options ??= new();
-
+		_semaphore.Wait();
 		BinaryReader binaryReader = new(stream);
 
 		byte[] signature = binaryReader.ReadBytes(4);
 		int jsonBlockCount = binaryReader.ReadInt32();
 
+		_semaphore.Release();
 		// Verify replay signature
 		if (!signature.SequenceEqual(ReplaySignature))
 		{
@@ -84,11 +87,13 @@ public sealed class ReplayUnpackerService<TController> : ReplayUnpackerService, 
 		// The first block is the arena info
 		// Read it and create the unpacked replay model
 		UnpackedReplay replay = _replayController.CreateUnpackedReplay(ReadJsonBlock<ArenaInfo>(binaryReader));
+		_semaphore.Wait();
 		ReadExtraJsonBlocks(replay, binaryReader, jsonBlockCount);
 
 		MemoryStream decryptedStream = new();
 		Decrypt(binaryReader, decryptedStream);
 
+		_semaphore.Release();
 		// Initial stream and reader not used anymore
 		binaryReader.Dispose();
 
@@ -99,11 +104,12 @@ public sealed class ReplayUnpackerService<TController> : ReplayUnpackerService, 
 		decryptedStream.Dispose();
 
 
+		_semaphore.Wait();
 		foreach (NetworkPacketBase networkPacket in _replayDataParser.ParseNetworkPackets(replayDataStream, options))
 		{
 			_replayController.HandleNetworkPacket(networkPacket, options);
 		}
-
+		_semaphore.Release();
 		return replay;
 	}
 

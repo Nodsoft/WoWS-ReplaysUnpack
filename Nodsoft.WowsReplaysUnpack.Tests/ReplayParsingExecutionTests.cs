@@ -5,10 +5,6 @@ using Nodsoft.WowsReplaysUnpack.Services;
 using Xunit;
 
 
-/*
- * FIXME: Test parallelization is disabled due to a file loading issue.
- */
-[assembly: CollectionBehavior(DisableTestParallelization = true)]
 namespace Nodsoft.WowsReplaysUnpack.Tests;
 
 /// <summary>
