@@ -105,11 +105,8 @@ public sealed class ReplayUnpackerService<TController> : ReplayUnpackerService, 
 		// Decrypted stream not used anymore
 		decryptedStream.Dispose();
 
-
-		_semaphore.Wait();
 		Version gameclientVersion = Version.Parse(arenaInfo.ClientVersionFromExe.Replace(',', '.'));
-		//foreach (NetworkPacketBase networkPacket in _replayDataParser.ParseNetworkPackets(replayDataStream, options))
-		
+		_semaphore.Wait();
 		foreach (NetworkPacketBase networkPacket in _replayDataParser.ParseNetworkPackets(replayDataStream, options, gameclientVersion))
 		{
 			_replayController.HandleNetworkPacket(networkPacket, options);
