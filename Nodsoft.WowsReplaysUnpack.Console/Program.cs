@@ -15,7 +15,7 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
 
-string samplePath = Path.Join(Directory.GetCurrentDirectory(), "../../../..", "Replay-Samples");
+string samplePath = Path.Join(Directory.GetCurrentDirectory(), "../../../../Nodsoft.WowsReplaysUnpack.Tests", "Replay-Samples");
 FileStream _GetReplayFile(string name) => File.OpenRead(Path.Join(samplePath, name));
 
 ServiceProvider? services = new ServiceCollection()
