@@ -190,5 +190,5 @@ public class DefaultDefinitionStore : IDefinitionStore
 	/// </summary>
 	/// <param name="values">Parts of the cache key.</param>
 	/// <returns>The joined cache key.</returns>
-	protected static string CacheKey(params string[] values) => string.Join(Consts.Underscore, values);
+	protected static string CacheKey(params string[] values) => string.Join('_', values);
 }

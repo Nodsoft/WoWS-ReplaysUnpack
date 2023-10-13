@@ -32,7 +32,7 @@ public sealed record ArenaInfo(
 	Dictionary<int, List<string>> WeatherParams,
 	int PlayersPerTeam,
 	int Duration,
-	string GameLogic,
+	string? GameLogic,
 	string Name,
 	string Scenario,
 	List<VehicleDetails> Vehicles,
@@ -41,9 +41,12 @@ public sealed record ArenaInfo(
 	string PlayerName,
 	int ScenarioConfigId,
 	int TeamsCount,
-	string Logic,
+	string? Logic,
 	string PlayerVehicle,
-	int BattleDuration);
+	int BattleDuration,
+	object[]? DisabledShipClasses,
+	object? MapBorder
+);
 
 /// <summary>
 /// Represents a vehicle in the replay.

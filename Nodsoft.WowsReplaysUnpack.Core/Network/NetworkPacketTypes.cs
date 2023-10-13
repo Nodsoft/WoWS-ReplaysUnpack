@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 
 namespace Nodsoft.WowsReplaysUnpack.Core.Network;
 
@@ -7,33 +8,48 @@ namespace Nodsoft.WowsReplaysUnpack.Core.Network;
 /// </summary>
 public static class NetworkPacketTypes
 {
-	public const uint BasePlayerCreate = 0x0;
-	public const uint CellPlayerCreate = 0x1;
-	public const uint EntityControl = 0x2;
-	public const uint EntityEnter = 0x3;
-	public const uint EntityLeave = 0x4;
-	public const uint EntityCreate = 0x5;
-	public const uint EntityProperty = 0x7;
-	public const uint EntityMethod = 0x8;
-	public const uint Map = 0x27;
-	public const uint NestedProperty = 0x22;
-	public const uint Position = 0x0a;
-	public const uint PlayerPosition = 0x2b;
-
-	private static readonly Dictionary<uint, string> _names = new();
-
-	static NetworkPacketTypes()
+	public static IReadOnlyDictionary<uint, string> BasePackets { get; } = new Dictionary<uint, string>
 	{
-		foreach (FieldInfo field in typeof(NetworkPacketTypes).GetFields(BindingFlags.Public))
-		{
-			_names.Add((uint)field.GetValue(null)!, field.Name);
-		}
-	}
+		{ 0x0, "BasePlayerCreate"},
+		{ 0x1, "CellPlayerCreate"},
+		{ 0x2, "EntityControl"},
+		{ 0x3, "EntityEnter"},
+		{ 0x4, "EntityLeave"},
+		{ 0x5, "EntityCreate"},
+		{ 0x7, "EntityProperty"},
+		{ 0x8, "EntityMethod"},
+		{ 0x27, "Map"},
+		{ 0x22, "NestedProperty"},
+		{ 0x0a, "Position"},
+		{ 0x2b, "PlayerPosition"}
+	};
+
+	// Amended Packet IDs for 0.12.6
+	public static IReadOnlyDictionary<uint, string> AmendedPackets126 { get; } = new Dictionary<uint, string>
+	{
+		{ 0x0, "BasePlayerCreate"},
+		{ 0x1, "CellPlayerCreate"},
+		{ 0x2, "EntityControl"},
+		{ 0x3, "EntityEnter"},
+		{ 0x4, "EntityLeave"},
+		{ 0x5, "EntityCreate"},
+		{ 0x7, "EntityProperty"},
+		{ 0x8, "EntityMethod"},
+		{ 0x28, "Map" },
+		{ 0x23, "NestedProperty" },
+		{ 0x0a, "Position"},
+		{ 0x2b, "PlayerPosition"}
+			
+	};
 
 	/// <summary>
 	/// Gets the name of a network packet type by its ID.
 	/// </summary>
 	/// <param name="id">The ID of the packet type.</param>
 	/// <returns>The name of the packet type.</returns>
-	public static string GetTypeName(uint id) => _names.ContainsKey(id) ? _names[id] : $"Unsupported Type ({id})";
+	public static string GetTypeName(uint id, Version version) =>(version switch
+	{
+		{ Major: > 12 } or { Major: 12, Minor: >= 6 } => AmendedPackets126,
+		_ => BasePackets
+	}).TryGetValue(id, out string? name) ? name : $"Unknown Packet ({id})";
 }

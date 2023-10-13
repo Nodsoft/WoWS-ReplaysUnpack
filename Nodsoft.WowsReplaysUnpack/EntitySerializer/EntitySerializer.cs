@@ -15,6 +15,14 @@ public static class EntitySerializer
 		return obj;
 	}
 
+	public static T[] Deserialize<T>(IEnumerable<Entity> entities) where T : class
+	{
+	var result = new List<T>();
+		foreach(var entity in entities)
+			result.Add(Deserialize<T>(entity));
+		return result.ToArray();
+	}
+
 	private static void DeserializeDictionaryProperties(Dictionary<string, object?> entityProperties, PropertyInfo[] propertyInfos, object obj)
 	{
 		Dictionary<string, object?> invariantDictionary = entityProperties.ToDictionary(kv => kv.Key, kv => kv.Value, StringComparer.OrdinalIgnoreCase);

@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using Nodsoft.WowsReplaysUnpack.Controllers;
 using Nodsoft.WowsReplaysUnpack.Core.Definitions;
 using Nodsoft.WowsReplaysUnpack.Core.Entities;

@@ -90,15 +90,13 @@ public abstract record BaseDefinition
 
 	private void ParseVolatile()
 	{
-		string[] singleProps = { "yaw", "pitch", "roll" };
-
 		foreach (PropertyDefinition? property in _properties)
 		{
 			if (property.Name is "position")
 			{
 				VolatileProperties[property.Name] = new Vector3(0f, 0f, 0f);
 			}
-			else if (singleProps.Contains(property.Name))
+			else if (property.Name is "yaw" or "pitch" or "roll")
 			{
 				VolatileProperties[property.Name] = 0.0f;
 			}

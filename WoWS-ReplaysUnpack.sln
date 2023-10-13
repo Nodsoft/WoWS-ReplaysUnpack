@@ -20,16 +20,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nodsoft.WowsReplaysUnpack.C
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nodsoft.WowsReplaysUnpack.Benchmark", "Nodsoft.WowsReplaysUnpack.Benchmark\Nodsoft.WowsReplaysUnpack.Benchmark.csproj", "{1B61AA91-1578-4E90-94B3-BBE721327AC0}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Replay-Samples", "Replay-Samples", "{4A21D0B7-4A7F-49B7-A579-AB399D2637D2}"
-	ProjectSection(SolutionItems) = preProject
-		Replay-Samples\0.10.10.wowsreplay = Replay-Samples\0.10.10.wowsreplay
-		Replay-Samples\0.10.11.wowsreplay = Replay-Samples\0.10.11.wowsreplay
-		Replay-Samples\0.11.0.wowsreplay = Replay-Samples\0.11.0.wowsreplay
-		Replay-Samples\0.11.2.wowsreplay = Replay-Samples\0.11.2.wowsreplay
-		Replay-Samples\good.wowsreplay = Replay-Samples\good.wowsreplay
-		Replay-Samples\payload.wowsreplay = Replay-Samples\payload.wowsreplay
-	EndProjectSection
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Library", "Library", "{367BF192-3EC3-4A87-B8E4-3E444E7019D0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nodsoft.WowsReplaysUnpack.ExtendedData", "Nodsoft.WowsReplaysUnpack.ExtendedData\Nodsoft.WowsReplaysUnpack.ExtendedData.csproj", "{A9D51B91-8D9E-4E8E-A1A7-26BD5223EC53}"

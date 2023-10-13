@@ -31,5 +31,5 @@ public class FixedList : List<object?>, IFixedLength
 	/// Returns a string enumeration of the list.
 	/// </summary>
 	/// <returns>A string enumeration of the list.</returns>
-	public override string ToString() => $"[{string.Join($"{Consts.Comma} ", this)}]";
+	public override string ToString() => $"[{string.Join($"{','} ", this)}]";
 }

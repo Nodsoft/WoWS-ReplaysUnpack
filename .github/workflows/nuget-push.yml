@@ -46,7 +46,7 @@ jobs:
         with:
           dotnet-version: 6.0.x
 
-      - uses: dotnet/nbgv@main
+      - uses: dotnet/nbgv@master
         id: nbgv
 
       - name: Restore dependencies

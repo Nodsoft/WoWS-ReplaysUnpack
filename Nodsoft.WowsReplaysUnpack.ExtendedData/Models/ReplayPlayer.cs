@@ -84,6 +84,13 @@ public record ReplayPlayer
 	public bool TtkStatus { get; set; }
 
 	public Lazy<ShipData?> ShipData { get; }
+	
+	
+	/*
+	 * FIXME: This is a hack to get replays to parse correctly post 0.11.11+.
+	 * No idea what it is for now, my assumption was on the new Key Target / Cookie feature.
+	 */
+	public object IsCookie { get; set; }
 
 	public ReplayPlayer(ShipConfigMapping shipConfigMapping)
 	{

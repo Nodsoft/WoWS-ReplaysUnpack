@@ -17,7 +17,7 @@ public class DefaultReplayDataParser : IReplayDataParser
 	public DefaultReplayDataParser(ILogger<DefaultReplayDataParser> logger) => (_logger, _packetBufferReader) = (logger, new(_packetBuffer));
 
 	/// <inheritdoc />
-	public virtual IEnumerable<NetworkPacketBase> ParseNetworkPackets(MemoryStream replayDataStream, ReplayUnpackerOptions options)
+	public virtual IEnumerable<NetworkPacketBase> ParseNetworkPackets(MemoryStream replayDataStream, ReplayUnpackerOptions options, Version gameVersion)
 	{
 		int packetIndex = 0;
 		using BinaryReader binaryReader = new(replayDataStream);
@@ -28,7 +28,7 @@ public class DefaultReplayDataParser : IReplayDataParser
 			float packetTime = binaryReader.ReadSingle(); // Time in seconds from battle start
 
 			_logger.LogDebug("Packet parsed of type '{PacketType}' with size '{PacketSize}' and timestamp '{PacketTime}'",
-				NetworkPacketTypes.GetTypeName(packetType), packetSize, packetTime);
+				NetworkPacketTypes.GetTypeName(packetType, gameVersion), packetSize, packetTime);
 
 			byte[] packetData = binaryReader.ReadBytes((int)packetSize);
 
@@ -38,26 +38,47 @@ public class DefaultReplayDataParser : IReplayDataParser
 			_packetBuffer.Write(packetData);
 			_packetBuffer.Seek(0, SeekOrigin.Begin);
 
-			yield return packetType switch
-			{
-				NetworkPacketTypes.BasePlayerCreate => new BasePlayerCreatePacket(packetIndex, _packetBufferReader),
-				NetworkPacketTypes.CellPlayerCreate => new CellPlayerCreatePacket(packetIndex, _packetBufferReader),
-				NetworkPacketTypes.EntityControl => new EntityControlPacket(packetIndex, _packetBufferReader),
-				NetworkPacketTypes.EntityEnter => new EntityEnterPacket(packetIndex, _packetBufferReader),
-				NetworkPacketTypes.EntityLeave => new EntityLeavePacket(packetIndex, _packetBufferReader),
-				NetworkPacketTypes.EntityCreate => new EntityCreatePacket(packetIndex, _packetBufferReader),
-				NetworkPacketTypes.EntityProperty => new EntityPropertyPacket(packetIndex, _packetBufferReader),
-				NetworkPacketTypes.EntityMethod => new EntityMethodPacket(packetIndex, packetTime, _packetBufferReader),
-				NetworkPacketTypes.Map => new MapPacket(packetIndex, _packetBufferReader),
-				NetworkPacketTypes.NestedProperty => new NestedPropertyPacket(packetIndex, _packetBufferReader),
-				NetworkPacketTypes.Position => new PositionPacket(packetIndex, _packetBufferReader),
-				NetworkPacketTypes.PlayerPosition => new PlayerPositionPacket(packetIndex, _packetBufferReader),
-				_ => new UnknownPacket(packetIndex, _packetBufferReader)
-			};
+			yield return PacketTypeMap.TryGetValue(NetworkPacketTypes.GetTypeName(packetType, gameVersion), out var packetTypeFunc)
+				? packetTypeFunc(packetIndex, packetTime, _packetBufferReader)
+				: new UnknownPacket(packetIndex, _packetBufferReader);
+			
+//			yield return packetType switch
+//			{
+//				0x0 => new BasePlayerCreatePacket(packetIndex, _packetBufferReader),
+//				NetworkPacketTypes.CellPlayerCreate => new CellPlayerCreatePacket(packetIndex, _packetBufferReader),
+//				NetworkPacketTypes.EntityControl => new EntityControlPacket(packetIndex, _packetBufferReader),
+//				NetworkPacketTypes.EntityEnter => new EntityEnterPacket(packetIndex, _packetBufferReader),
+//				NetworkPacketTypes.EntityLeave => new EntityLeavePacket(packetIndex, _packetBufferReader),
+//				NetworkPacketTypes.EntityCreate => new EntityCreatePacket(packetIndex, _packetBufferReader),
+//				NetworkPacketTypes.EntityProperty => new EntityPropertyPacket(packetIndex, _packetBufferReader),
+//				NetworkPacketTypes.EntityMethod => new EntityMethodPacket(packetIndex, packetTime, _packetBufferReader),
+//				NetworkPacketTypes.Map => new MapPacket(packetIndex, _packetBufferReader),
+//				NetworkPacketTypes.NestedProperty => new NestedPropertyPacket(packetIndex, _packetBufferReader),
+//				NetworkPacketTypes.Position => new PositionPacket(packetIndex, _packetBufferReader),
+//				NetworkPacketTypes.PlayerPosition => new PlayerPositionPacket(packetIndex, _packetBufferReader),
+//				_ => new UnknownPacket(packetIndex, _packetBufferReader)
+//			};
 			packetIndex++;
 		}
 	}
 
+	private static readonly Dictionary<string, Func<int, float, BinaryReader, NetworkPacketBase>> PacketTypeMap = new()
+	{
+		{ "", static (index, _, reader) => new UnknownPacket(index, reader) },
+		{ "BasePlayerCreate", static (index, _, reader) => new BasePlayerCreatePacket(index, reader) },
+		{ "CellPlayerCreate", static (index, _, reader) => new CellPlayerCreatePacket(index, reader) },
+		{ "EntityControl", static (index, _, reader) => new EntityControlPacket(index, reader) },
+		{ "EntityEnter", static (index, _, reader) => new EntityEnterPacket(index, reader) },
+		{ "EntityLeave", static (index, _, reader) => new EntityLeavePacket(index, reader) },
+		{ "EntityCreate", static (index, _, reader) => new EntityCreatePacket(index, reader) },
+		{ "EntityProperty", static (index, _, reader) => new EntityPropertyPacket(index, reader) },
+		{ "EntityMethod", static (index, time, reader) => new EntityMethodPacket(index, time, reader) },
+		{ "Map", static (index, _, reader) => new MapPacket(index, reader) },
+		{ "NestedProperty", static (index, _, reader) => new NestedPropertyPacket(index, reader) },
+		{ "Position", static (index, _, reader) => new PositionPacket(index, reader) },
+		{ "PlayerPosition", static (index, _, reader) => new PlayerPositionPacket(index, reader) }
+	};
+	
 	/// <summary>
 	/// Disposes the data parser.
 	/// </summary>

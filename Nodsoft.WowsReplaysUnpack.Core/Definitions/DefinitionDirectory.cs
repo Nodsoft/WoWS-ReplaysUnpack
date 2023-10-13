@@ -48,11 +48,13 @@ public record DefinitionDirectory
 			}
 			else
 			{
-				string directoryName = actualFileName.GetStringBeforeIndex('.');
+				int dotPos = actualFileName.IndexOf('.');
+				string directoryName = actualFileName[..dotPos];
 
 				if (Directories.All(d => d.Name != directoryName))
 				{
-					Directories.Add(new(actualFileName.GetStringBeforeIndex('.'), fileName.GetStringBeforeIndex("." + actualFileName.GetStringAfterIndex('.')), fileNames));
+					string before = $".{actualFileName[(dotPos + 1)..]}";
+					Directories.Add(new(actualFileName[..dotPos], fileName[..fileName.IndexOf(before, StringComparison.Ordinal)], fileNames));
 				}
 			}
 		}
