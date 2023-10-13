@@ -7,7 +7,7 @@ namespace Nodsoft.WowsReplaysUnpack.Tests;
 /// </summary>
 public static class Utilities
 {
-	private static readonly string _sampleFolder = Path.Join(Directory.GetCurrentDirectory(), "..", "..", "..", "..", "Replay-Samples");
+	private static readonly string _sampleFolder = Path.Join(Directory.GetCurrentDirectory(), "Replay-Samples");
 	
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static MemoryStream LoadReplay(string replayPath)
