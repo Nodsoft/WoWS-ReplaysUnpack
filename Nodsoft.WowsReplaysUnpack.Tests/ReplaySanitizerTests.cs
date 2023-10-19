@@ -7,10 +7,13 @@ using Xunit;
 
 namespace Nodsoft.WowsReplaysUnpack.Tests;
 
+/// <summary>
+/// Provides tests for the replay RCE detection system.
+/// </summary>
 public class ReplaySanitizerTests
 {
 	private readonly ReplayUnpackerFactory _factory;
-	private readonly string _sampleFolder = Path.Join(Directory.GetCurrentDirectory(), "Replay-Samples");
+	
 
 	public ReplaySanitizerTests()
 	{
@@ -27,18 +30,8 @@ public class ReplaySanitizerTests
 	[Fact]
 	public void TestGoodReplay_Pass()
 	{
-		UnpackedReplay replay = _factory.GetUnpacker().Unpack(LoadReplay("good.wowsreplay"));
+		UnpackedReplay replay = _factory.GetUnpacker().Unpack(Utilities.LoadReplay("good.wowsreplay"));
 		Assert.NotNull(replay);
-	}
-
-	private MemoryStream LoadReplay(string replayPath)
-	{
-		using FileStream fs = File.OpenRead(Path.Join(_sampleFolder, replayPath));
-		MemoryStream ms = new();
-		fs.CopyTo(ms);
-		ms.Position = 0;
-
-		return ms;
 	}
 
 	/// <summary>
@@ -47,6 +40,6 @@ public class ReplaySanitizerTests
 	[Fact]
 	public void TestPayloadReplayDetection()
 	{
-		Assert.Throws<CveSecurityException>(() => _factory.GetUnpacker().Unpack(LoadReplay("payload.wowsreplay")));
+		Assert.Throws<CveSecurityException>(() => _factory.GetUnpacker().Unpack(Utilities.LoadReplay("payload.wowsreplay")));
 	}
 }

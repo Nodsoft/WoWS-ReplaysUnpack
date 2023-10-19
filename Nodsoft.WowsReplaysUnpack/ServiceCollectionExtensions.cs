@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Nodsoft.WowsReplaysUnpack.Controllers;
 using Nodsoft.WowsReplaysUnpack.Core.Definitions;
 using Nodsoft.WowsReplaysUnpack.Services;
 
@@ -18,25 +17,28 @@ public static class ServiceCollectionExtensions
 	/// <param name="services">The service collection.</param>
 	/// <returns>The service collection.</returns>
 	public static IServiceCollection AddWowsReplayUnpacker(this IServiceCollection services) 
-		=> services.AddWowsReplayUnpacker<DefaultReplayDataParser, DefaultDefinitionStore>();
-	
+		=> services.AddWowsReplayUnpacker<DefaultReplayDataParser, DefaultDefinitionStore, AssemblyDefinitionLoader>();
+
 	/// <summary>
 	/// Registers the WOWS replay data unpacker,
-	/// using the specified <see cref="IReplayDataParser"/> and <see cref="IDefinitionStore"/>
+	/// using the specified <see cref="IReplayDataParser"/>, <see cref="IDefinitionStore"/> and <see cref="IDefinitionLoader"/>
 	/// for parsing the replay data and definitions.
 	/// </summary>
 	/// <param name="services">The service collection to add the services to.</param>
 	/// <typeparam name="TReplayDataParser">The type of the replay data parser.</typeparam>
 	/// <typeparam name="TDefinitionStore">The type of the definition store.</typeparam>
+	/// <typeparam name="TDefinitionLoader">The type of the definition loader.</typeparam>
 	/// <returns>The service collection.</returns>
-	public static IServiceCollection AddWowsReplayUnpacker<TReplayDataParser, TDefinitionStore>(this IServiceCollection services)
+	public static IServiceCollection AddWowsReplayUnpacker<TReplayDataParser, TDefinitionStore, TDefinitionLoader>(this IServiceCollection services)
 		where TReplayDataParser : class, IReplayDataParser
 		where TDefinitionStore : class, IDefinitionStore
+		where TDefinitionLoader : class, IDefinitionLoader
 		=> services.AddWowsReplayUnpacker(unpacker =>
 			{
 				unpacker
 					.WithReplayDataParser<TReplayDataParser>()
-					.WithDefinitionStore<TDefinitionStore>();
+					.WithDefinitionStore<TDefinitionStore>()
+					.WithDefinitionLoader<TDefinitionLoader>();
 			}
 		);
 	
@@ -55,79 +57,5 @@ public static class ServiceCollectionExtensions
 
 		services.AddScoped<ReplayUnpackerFactory>();
 		return services;
-	}
-
-	/// <summary>
-	/// Provides a fluent API to build a WOWS replay data unpacker.
-	/// </summary>
-	public class ReplayUnpackerBuilder
-	{
-		private bool replayDataParserAdded;
-		private bool definitionStoreAdded;
-
-		public IServiceCollection Services { get; }
-
-		/// <summary>
-		/// Intializes a new instance of the <see cref="ReplayUnpackerBuilder" /> class,
-		/// by registering a <see cref="ReplayUnpackerService" /> as baseline.
-		/// </summary>
-		/// <param name="services"></param>
-		public ReplayUnpackerBuilder(IServiceCollection services)
-		{
-			Services = services;
-			AddReplayController<DefaultReplayController>();
-		}
-		
-		/// <summary>
-		/// Registers a <see cref="IReplayDataParser" /> for use in the WOWS replay data unpacker.
-		/// </summary>
-		/// <typeparam name="TParser">The type of the replay data parser.</typeparam>
-		/// <returns>The builder.</returns>
-		public ReplayUnpackerBuilder WithReplayDataParser<TParser>() where TParser : class, IReplayDataParser
-		{
-			Services.AddScoped<IReplayDataParser, TParser>();
-			replayDataParserAdded = true;
-			return this;
-		}
-
-		/// <summary>
-		/// Registers a <see cref="IReplayController" /> for use in the WOWS replay data unpacker.
-		/// </summary>
-		/// <typeparam name="TController">The type of the replay controller.</typeparam>
-		/// <returns>The builder.</returns>
-		public ReplayUnpackerBuilder AddReplayController<TController>() where TController : class, IReplayController
-		{
-			Services.AddScoped<ReplayUnpackerService<TController>>();
-			Services.AddScoped<TController>();
-			return this;
-		}
-
-		/// <summary>
-		/// Registers a <see cref="IDefinitionStore" /> for use in the WOWS replay data unpacker.
-		/// </summary>
-		/// <typeparam name="TStore">The type of the definition store.</typeparam>
-		/// <returns>The builder.</returns>
-		public ReplayUnpackerBuilder WithDefinitionStore<TStore>() where TStore : class, IDefinitionStore
-		{
-			Services.AddSingleton<IDefinitionStore, TStore>();
-			definitionStoreAdded = true;
-			return this;
-		}
-		
-		/// <summary>
-		/// Builds the WOWS replay data unpacker, registering any missing services.
-		/// </summary>
-		public void Build()
-		{
-			if (!replayDataParserAdded)
-			{
-				WithReplayDataParser<DefaultReplayDataParser>();
-			}
-
-			if (!definitionStoreAdded)
-			{
-				WithDefinitionStore<DefaultDefinitionStore>();
-			}
-		}
 	}
 }

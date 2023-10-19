@@ -4,9 +4,6 @@
         <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
         <AnalysisLevel>latest</AnalysisLevel>
 
-        <!--    <VersionPrefix>1.0</VersionPrefix>-->
-        <!--    <VersionSuffix>pre1</VersionSuffix>-->
-
         <Company>Nodsoft Systems</Company>
         <Authors>imkindaprogrammermyself, Sakura Akeno Isayeki, floribe2000, StewieoO</Authors>
         <Product>WoWS Replays Unpack</Product>
@@ -31,10 +28,6 @@
             <PrivateAssets>all</PrivateAssets>
             <Version>3.5.108</Version>
         </PackageReference>
-    </ItemGroup>
-
-    <ItemGroup>
-        <PackageReference Include="Nerdbank.GitVersioning" Version="$(NerdbankGitVersioningVersion)" PrivateAssets="all" />
     </ItemGroup>
 
     <ImportGroup Condition=" '$(ExcludeRestorePackageImports)' == 'true' ">

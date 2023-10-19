@@ -24,6 +24,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Library", "Library", "{367B
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nodsoft.WowsReplaysUnpack.ExtendedData", "Nodsoft.WowsReplaysUnpack.ExtendedData\Nodsoft.WowsReplaysUnpack.ExtendedData.csproj", "{A9D51B91-8D9E-4E8E-A1A7-26BD5223EC53}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nodsoft.WowsReplaysUnpack.FileStore", "Nodsoft.WowsReplaysUnpack.FileStore\Nodsoft.WowsReplaysUnpack.FileStore.csproj", "{5278C904-639B-4368-A98C-6F7F79B1683E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -54,6 +56,10 @@ Global
 		{A9D51B91-8D9E-4E8E-A1A7-26BD5223EC53}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A9D51B91-8D9E-4E8E-A1A7-26BD5223EC53}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A9D51B91-8D9E-4E8E-A1A7-26BD5223EC53}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5278C904-639B-4368-A98C-6F7F79B1683E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5278C904-639B-4368-A98C-6F7F79B1683E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5278C904-639B-4368-A98C-6F7F79B1683E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5278C904-639B-4368-A98C-6F7F79B1683E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -62,6 +68,7 @@ Global
 		{B7A3AA8B-E20E-4DE9-B63A-A1A96741EFCD} = {367BF192-3EC3-4A87-B8E4-3E444E7019D0}
 		{18EF6FA2-5AF1-4277-81F4-7104BB35B3BD} = {367BF192-3EC3-4A87-B8E4-3E444E7019D0}
 		{A9D51B91-8D9E-4E8E-A1A7-26BD5223EC53} = {367BF192-3EC3-4A87-B8E4-3E444E7019D0}
+		{5278C904-639B-4368-A98C-6F7F79B1683E} = {367BF192-3EC3-4A87-B8E4-3E444E7019D0}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {26B5CF6B-2C64-417B-8149-3DFD8E93D497}
