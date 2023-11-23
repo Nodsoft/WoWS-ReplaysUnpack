@@ -236,14 +236,14 @@ public class Entity
 		{
 			IEnumerable<object?> methodArgumentValues = methodDefinition.Arguments.Select(a => a.GetValue(reader));
 
-			if (attribute.IncludeEntity)
-			{
-				methodArgumentValues = methodArgumentValues.Prepend(this);
-			}
-
 			if (attribute.IncludePacketTime)
 			{
 				methodArgumentValues = methodArgumentValues.Prepend(packetTime);
+			}
+			
+			if (attribute.IncludeEntity)
+			{
+				methodArgumentValues = methodArgumentValues.Prepend(this);
 			}
 
 			Logger.LogDebug("Calling method subscription with hash {Hash}", hash);
@@ -272,16 +272,16 @@ public class Entity
 		{
 			IEnumerable<object> methodArgumentValues = new object[] { methodDefinition.Arguments.ToDictionary(a => a.Name, a => a.GetValue(reader)) };
 
-			if (attribute.IncludeEntity)
-			{
-				methodArgumentValues = methodArgumentValues.Prepend(this);
-			}
-
 			if (attribute.IncludePacketTime)
 			{
 				methodArgumentValues = methodArgumentValues.Prepend(packetTime);
 			}
-
+			
+			if (attribute.IncludeEntity)
+			{
+				methodArgumentValues = methodArgumentValues.Prepend(this);
+			}
+			
 			Logger.LogDebug("Calling method subscription with hash {Hash}", hash);
 			methodInfo.Invoke(subscriptionTarget, methodArgumentValues.ToArray());
 		}
