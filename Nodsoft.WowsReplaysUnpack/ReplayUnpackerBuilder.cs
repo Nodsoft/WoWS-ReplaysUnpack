@@ -58,7 +58,7 @@ public class ReplayUnpackerBuilder
 	/// <returns>The builder.</returns>
 	public ReplayUnpackerBuilder WithDefinitionLoader<TLoader>() where TLoader : class, IDefinitionLoader
 	{
-		Services.AddScoped<IDefinitionLoader, TLoader>();
+		Services.AddSingleton<IDefinitionLoader, TLoader>();
 		definitionLoaderAdded = true;
 		return this;
 	}
