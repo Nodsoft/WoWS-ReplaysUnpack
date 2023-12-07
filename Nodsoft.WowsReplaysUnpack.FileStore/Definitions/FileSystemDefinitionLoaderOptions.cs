@@ -3,7 +3,7 @@
 /// <summary>
 /// Defines settings for the <see cref="FileSystemDefinitionLoader"/>.
 /// </summary>
-public record FileSystemDefinitionLoaderOptions
+public class FileSystemDefinitionLoaderOptions
 {
 	/// <summary>
 	/// Gets or sets the path to the directory containing the definitions.

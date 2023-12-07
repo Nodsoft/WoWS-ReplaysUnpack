@@ -25,7 +25,7 @@ public class FileSystemDefinitionLoader : IDefinitionLoader
 	/// <inheritdoc/>
 	public XmlDocument GetFileAsXml(Version clientVersion, string name, params string[] directoryNames)
 	{
-		string path = Path.Combine(_options.CurrentValue.RootDirectory, ToFilesystemString(clientVersion), "scripts", Path.Combine(directoryNames), name);
+		string path = Path.Combine(_options.CurrentValue.RootDirectory, clientVersion.ToString().Replace('.', '_'), "scripts", Path.Combine(directoryNames), name);
 		
 		if (!File.Exists(path))
 		{
@@ -48,22 +48,10 @@ public class FileSystemDefinitionLoader : IDefinitionLoader
 		// These will be structured by <major>_<minor>_<patch> (e.g. 0_11_0),
 		// so we'll need to parse them accordingly into Version objects.
 		Version[] versions = new DirectoryInfo(_options.CurrentValue.RootDirectory).GetDirectories()
-			.Select(static dir => FromFilesystemString(dir.Name))
+			.Select(static dir => new Version(dir.Name.Replace('_', '.')))
 			.OrderByDescending(static version => version)
 			.ToArray();
 		
 		return versions;
-	}
-	
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static string ToFilesystemString(Version version)
-	{
-		return version.ToString().Replace('.', '_');
-	}
-	
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static Version FromFilesystemString(string version)
-	{
-		return new(version.Replace('_', '.'));
 	}
 }
