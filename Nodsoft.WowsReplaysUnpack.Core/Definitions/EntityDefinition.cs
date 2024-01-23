@@ -18,10 +18,8 @@ public record EntityDefinition : BaseDefinition
 	/// </summary>
 	public List<EntityMethodDefinition> ClientMethods { get; private set; } = new();
 
-	public EntityDefinition(Version clientVersion, IDefinitionStore definitionStore,
-		string name) : base(clientVersion, definitionStore, name, ENTITY_DEFS)
-	{
-	}
+	public EntityDefinition(Version clientVersion, IDefinitionStore definitionStore, string name) 
+		: base(clientVersion, definitionStore, name, ENTITY_DEFS) { }
 
 	/// <summary>
 	/// Parses a .def file for the entity definition.

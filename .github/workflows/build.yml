@@ -1,9 +1,10 @@
 name: .NET Build & Test
 
 on:
-  - push
-  - pull_request
-  - workflow_call
+  push:
+  pull_request:
+  workflow_call:
+  workflow_dispatch:
 
 jobs:
   build:

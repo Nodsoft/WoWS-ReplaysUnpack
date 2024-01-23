@@ -6,22 +6,31 @@ using Nodsoft.WowsReplaysUnpack.Core.Models;
 using Nodsoft.WowsReplaysUnpack.EntitySerializer;
 using Nodsoft.WowsReplaysUnpack.ExtendedData;
 using Nodsoft.WowsReplaysUnpack.ExtendedData.Models;
+using Nodsoft.WowsReplaysUnpack.FileStore.Definitions;
 using Nodsoft.WowsReplaysUnpack.Services;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
+using System.Threading.Tasks;
 
-string samplePath = Path.Join(Directory.GetCurrentDirectory(), "../../../..", "Replay-Samples");
+string samplePath = Path.Join(Directory.GetCurrentDirectory(), "../../../../Nodsoft.WowsReplaysUnpack.Tests", "Replay-Samples");
 FileStream _GetReplayFile(string name) => File.OpenRead(Path.Join(samplePath, name));
 
 ServiceProvider? services = new ServiceCollection()
-	.AddWowsReplayUnpacker(builder =>
-	{
-		//builder.AddReplayController<CVECheckOnlyController>();
-		builder.AddExtendedData();
-	})
+	//.AddWowsReplayUnpacker(builder =>
+	//{
+	//	//builder.AddReplayController<CVECheckOnlyController>();
+	//	//builder.AddExtendedData();
+	//})
+	.AddWowsReplayUnpacker(builder => builder
+				.WithDefinitionLoader<FileSystemDefinitionLoader>())
+			.Configure<FileSystemDefinitionLoaderOptions>(options =>
+			{
+				options.RootDirectory = options.RootDirectory = Path.Join(Directory.GetCurrentDirectory(),
+					"..", "..", "..", "..", "Nodsoft.WowsReplaysUnpack.Core", "Definitions", "Versions");
+			})
 	.AddLogging(logging =>
 	{
 		logging.ClearProviders();
@@ -41,8 +50,32 @@ ReplayUnpackerFactory? replayUnpacker = services.GetRequiredService<ReplayUnpack
 //	Console.WriteLine($"[{GetGroupString(msg)}] {msg.EntityId} : {msg.MessageContent}");
 //}
 
+const int CYCLE = 20;
+async Task<UnpackedReplay[]> syncTasks(bool sync)
+{
+	List<UnpackedReplay> unpackedReplays = new List<UnpackedReplay>();
+	if (sync)
+	{
+		for (int i = 0; i < CYCLE; i++)
+		{
+			replayUnpacker.GetUnpacker().Unpack(_GetReplayFile("good.wowsreplay"));
+		}
+	}
+	else
+	{	
+		Parallel.ForEach(Enumerable.Range(0, CYCLE), (i) =>
+		{
+			unpackedReplays.Add(replayUnpacker.GetUnpacker().Unpack(_GetReplayFile("good.wowsreplay")));
+		});
+	}
+	return unpackedReplays.ToArray();
+}
 
+DateTime start = DateTime.Now;
+await syncTasks(false);
+Console.WriteLine(DateTime.Now - start);
 
+var goodReplay = replayUnpacker.GetUnpacker().Unpack(_GetReplayFile("good.wowsreplay"));
 var alphaReplay = replayUnpacker.GetUnpacker().Unpack(_GetReplayFile("press_account_alpha.wowsreplay"));
 var bravoReplay = replayUnpacker.GetUnpacker().Unpack(_GetReplayFile("unfinished_replay.wowsreplay"));
 

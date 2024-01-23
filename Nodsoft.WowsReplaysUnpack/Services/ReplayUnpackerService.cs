@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.IO.Compression;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 
 namespace Nodsoft.WowsReplaysUnpack.Services;
 
@@ -22,6 +23,8 @@ public sealed class ReplayUnpackerService<TController> : ReplayUnpackerService, 
 	private readonly JsonSerializerOptions _jsonSerializerOptions = new() { PropertyNameCaseInsensitive = true };
 	private readonly IReplayDataParser _replayDataParser;
 	private readonly IReplayController _replayController;
+	private static readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1);
+	private const int _semephoreTimeOut = 2000;
 
 	public ReplayUnpackerService(IReplayDataParser replayDataParser, TController replayController)
 	{
@@ -70,12 +73,13 @@ public sealed class ReplayUnpackerService<TController> : ReplayUnpackerService, 
 		See http://wiki.vbaddict.net/pages/File_Replays for more details.
 		*/
 		options ??= new();
-
+		_semaphore.Wait(_semephoreTimeOut);
 		BinaryReader binaryReader = new(stream);
 
 		byte[] signature = binaryReader.ReadBytes(4);
 		int jsonBlockCount = binaryReader.ReadInt32();
 
+		_semaphore.Release();
 		// Verify replay signature
 		if (!signature.SequenceEqual(ReplaySignature))
 		{
@@ -86,11 +90,13 @@ public sealed class ReplayUnpackerService<TController> : ReplayUnpackerService, 
 		// Read it and create the unpacked replay model
 		ArenaInfo arenaInfo = ReadJsonBlock<ArenaInfo>(binaryReader);
 		UnpackedReplay replay = _replayController.CreateUnpackedReplay(arenaInfo);
+		_semaphore.Wait(_semephoreTimeOut);
 		ReadExtraJsonBlocks(replay, binaryReader, jsonBlockCount);
 
 		MemoryStream decryptedStream = new();
 		Decrypt(binaryReader, decryptedStream);
 
+		_semaphore.Release();
 		// Initial stream and reader not used anymore
 		binaryReader.Dispose();
 
@@ -100,14 +106,13 @@ public sealed class ReplayUnpackerService<TController> : ReplayUnpackerService, 
 		// Decrypted stream not used anymore
 		decryptedStream.Dispose();
 
-
 		Version gameclientVersion = Version.Parse(arenaInfo.ClientVersionFromExe.Replace(',', '.'));
-		
+		_semaphore.Wait(_semephoreTimeOut);
 		foreach (NetworkPacketBase networkPacket in _replayDataParser.ParseNetworkPackets(replayDataStream, options, gameclientVersion))
 		{
 			_replayController.HandleNetworkPacket(networkPacket, options);
 		}
-
+		_semaphore.Release();
 		return replay;
 	}
 
