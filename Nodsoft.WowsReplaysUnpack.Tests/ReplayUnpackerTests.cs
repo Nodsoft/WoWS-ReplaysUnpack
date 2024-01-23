@@ -38,6 +38,7 @@ public sealed class ReplayUnpackerTests
 		InlineData("12.10_2.wowsreplay"),
 		InlineData("12.11.1.wowsreplay"),
 		InlineData("13.0.wowsreplay"),
+		InlineData("13.0.1.wowsreplay"),
 	]
 	public void TestReplay_Pass(string replayPath)
 	{
@@ -80,6 +81,7 @@ public sealed class ReplayUnpackerTests
 		InlineData("12.10_2.wowsreplay"),
 		InlineData("12.11.1.wowsreplay"),
 		InlineData("13.0.wowsreplay"),
+		InlineData("13.0.1.wowsreplay"),
 	]
 	public void TestReplay_ExtendedData_Pass(string replayPath)
 	{
