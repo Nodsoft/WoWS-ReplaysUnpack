@@ -25,7 +25,7 @@ public class ReplayParsingExecutionTests
 			.BuildServiceProvider();
 		
 		ReplayUnpackerFactory unpackerFactory = services.GetRequiredService<ReplayUnpackerFactory>();
-		IReplayUnpackerService service = unpackerFactory.GetUnpacker();
+		IReplayUnpackerService<UnpackedReplay> service = unpackerFactory.GetUnpacker();
 		
 		// Act
 		UnpackedReplay metadata = service.Unpack(Utilities.LoadReplay("good.wowsreplay"));
@@ -56,7 +56,7 @@ public class ReplayParsingExecutionTests
 			.BuildServiceProvider();
 		
 		ReplayUnpackerFactory unpackerFactory = services.GetRequiredService<ReplayUnpackerFactory>();
-		IReplayUnpackerService service = unpackerFactory.GetUnpacker();
+		IReplayUnpackerService<UnpackedReplay> service = unpackerFactory.GetUnpacker();
 		
 		// Act
 		UnpackedReplay metadata = service.Unpack(Utilities.LoadReplay("good.wowsreplay"));

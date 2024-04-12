@@ -11,8 +11,22 @@ namespace Nodsoft.WowsReplaysUnpack.Controllers;
 /// Lightweight implementation of a replay controller, designed to analyse a replay for vulnerabilities. <br />
 /// Currently scans for signs of <a href="https://www.cve.org/CVERecord?id=CVE-2022-31265">CVE-2022-31265</a>.
 /// </summary>
-public class CveCheckOnlyController : ReplayControllerBase<CveCheckOnlyController>
+// [MethodSubscription("Avatar", "onArenaStateReceived", ParamsAsDictionary = true, Priority = -1)]
+public partial class CveCheckOnlyController : ReplayControllerBase<UnpackedReplay>
 {
+	partial void AvatarOnArenaStateReceived(Dictionary<string, object?> arguments);
+	// // Source Gen
+	void CallClientMethodDictionary(CveCheckOnlyController controller, string hash, float packetTime, int entityId,
+		Dictionary<string, object?> arguments)
+	{
+		switch (hash)
+		{
+			case "Avatar_onArenaStateReceived":
+				AvatarOnArenaStateReceived(arguments);
+				break;
+		}
+	}
+	
 	// ReSharper disable once ContextualLoggerProblem
 	public CveCheckOnlyController(IDefinitionStore definitionStore, ILogger<Entity> entityLogger) : base(definitionStore, entityLogger) { }
 

@@ -1,12 +1,25 @@
-﻿using Razorvine.Pickle.Objects;
+﻿using JetBrains.Annotations;
+using Razorvine.Pickle.Objects;
 using System.Collections;
 using System.Reflection;
 using System.Text;
 
 namespace Nodsoft.WowsReplaysUnpack.ExtendedData.Models;
 
+// TODO: Source Gen
 public record ReplayPlayer
 {
+	// // Source Gen
+	// static void SetProperty(ReplayPlayer player, string name, object value)
+	// {
+	// 	switch (name)
+	// 	{
+	// 		case "AccountId" when value is uint v1:
+	// 			player.AccountId = v1;
+	// 			break;
+	// 	}
+	// }
+	
 	public static IEnumerable<PropertyInfo> PropertyInfos { get; } = typeof(ReplayPlayer).GetProperties();
 
 	public uint AccountId { get; set; }
@@ -90,7 +103,7 @@ public record ReplayPlayer
 	 * FIXME: This is a hack to get replays to parse correctly post 0.11.11+.
 	 * No idea what it is for now, my assumption was on the new Key Target / Cookie feature.
 	 */
-	public object IsCookie { get; set; }
+	public object? IsCookie { get; set; }
 
 	public ReplayPlayer(ShipConfigMapping shipConfigMapping)
 	{

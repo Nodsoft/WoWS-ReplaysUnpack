@@ -9,24 +9,23 @@ using System.Diagnostics;
 using System.IO.Compression;
 using System.Text;
 using System.Text.Json;
-using System.Threading;
 
 namespace Nodsoft.WowsReplaysUnpack.Services;
 
 /// <summary>
 /// Provides a controllable service for unpacking World of Warships replays.
 /// </summary>
-/// <typeparam name="TController">Type of the controller, responsible for data extraction.</typeparam>
-public sealed class ReplayUnpackerService<TController> : ReplayUnpackerService, IReplayUnpackerService
-	where TController : IReplayController
+/// <typeparam name="TReplay"></typeparam>
+public sealed class ReplayUnpackerService<TReplay> : ReplayUnpackerService, IReplayUnpackerService<TReplay>
+	where TReplay : UnpackedReplay
 {
 	private readonly JsonSerializerOptions _jsonSerializerOptions = new() { PropertyNameCaseInsensitive = true };
 	private readonly IReplayDataParser _replayDataParser;
-	private readonly IReplayController _replayController;
-	private static readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1);
+	private readonly IReplayController<TReplay> _replayController;
+	private static readonly SemaphoreSlim _semaphore = new(1);
 	private const int _semephoreTimeOut = 2000;
 
-	public ReplayUnpackerService(IReplayDataParser replayDataParser, TController replayController)
+	public ReplayUnpackerService(IReplayDataParser replayDataParser, IReplayController<TReplay> replayController)
 	{
 		_jsonSerializerOptions.Converters.Add(new ReplayDateTimeJsonConverter());
 		_replayDataParser = replayDataParser;
@@ -34,7 +33,7 @@ public sealed class ReplayUnpackerService<TController> : ReplayUnpackerService, 
 	}
 
 	/// <inheritdoc />
-	public UnpackedReplay Unpack(byte[] data, ReplayUnpackerOptions? options = null)
+	public TReplay Unpack(byte[] data, ReplayUnpackerOptions? options = null)
 	{
 		// Stream is disposed in Unpack method
 		MemoryStream memoryStream = new(data);
@@ -43,7 +42,7 @@ public sealed class ReplayUnpackerService<TController> : ReplayUnpackerService, 
 	}
 
 	/// <inheritdoc />
-	public UnpackedReplay Unpack(Stream stream, ReplayUnpackerOptions? options = null)
+	public TReplay Unpack(Stream stream, ReplayUnpackerOptions? options = null)
 	{
 		/*
 		# Header
@@ -89,7 +88,7 @@ public sealed class ReplayUnpackerService<TController> : ReplayUnpackerService, 
 		// The first block is the arena info
 		// Read it and create the unpacked replay model
 		ArenaInfo arenaInfo = ReadJsonBlock<ArenaInfo>(binaryReader);
-		UnpackedReplay replay = _replayController.CreateUnpackedReplay(arenaInfo);
+		TReplay replay = _replayController.CreateUnpackedReplay(arenaInfo);
 		_semaphore.Wait(_semephoreTimeOut);
 		ReadExtraJsonBlocks(replay, binaryReader, jsonBlockCount);
 

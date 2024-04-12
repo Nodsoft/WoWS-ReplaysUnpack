@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Nodsoft.WowsReplaysUnpack.Controllers;
+using Nodsoft.WowsReplaysUnpack.Core.Models;
 
 namespace Nodsoft.WowsReplaysUnpack.Services;
 
@@ -13,16 +14,15 @@ public class ReplayUnpackerFactory
 	public ReplayUnpackerFactory(IServiceProvider serviceProvider) => _serviceProvider = serviceProvider;
 
 	/// <summary>
-	/// Gets an <see cref="IReplayUnpackerService" /> with the specified <typeparamref name="TController"/>.
+	/// Gets an <see cref="IReplayUnpackerService_TReplay>" /> with the specified <typeparamref name="TReplay"/>.
 	/// </summary>
-	/// <typeparam name="TController">The type of the controller.</typeparam>
-	/// <returns>An instance of <see cref="IReplayUnpackerService" />.</returns>
-	public IReplayUnpackerService GetUnpacker<TController>() where TController : IReplayController
-		=> _serviceProvider.GetRequiredService<ReplayUnpackerService<TController>>();
+	/// <typeparam name="TReplay">The type of the controller.</typeparam>
+	public IReplayUnpackerService<TReplay> GetUnpacker<TReplay>() where TReplay : UnpackedReplay
+		=> _serviceProvider.GetRequiredService<ReplayUnpackerService<TReplay>>();
 
 	/// <summary>
 	/// Gets the default <see cref="IReplayUnpackerService" />.
 	/// </summary>
 	/// <returns>An instance of <see cref="IReplayUnpackerService" />.</returns>
-	public IReplayUnpackerService GetUnpacker() => GetUnpacker<DefaultReplayController>();
+	public IReplayUnpackerService<UnpackedReplay> GetUnpacker() => GetUnpacker<UnpackedReplay>();
 }

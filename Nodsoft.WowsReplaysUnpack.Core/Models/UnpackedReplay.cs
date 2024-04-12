@@ -11,13 +11,13 @@ public record UnpackedReplay
 	/// <summary>
 	/// Game client version.
 	/// </summary>
-	public Version ClientVersion { get; }
+	public Version ClientVersion { get; init; }
 	
 	/// <summary>
 	/// Arena info associated to the replay.
 	/// Contains useful information about the battle that took place.
 	/// </summary>
-	public ArenaInfo ArenaInfo { get; }
+	public ArenaInfo ArenaInfo { get; init; }
 	
 	/// <summary>
 	/// Additional info about the replay.
@@ -39,9 +39,14 @@ public record UnpackedReplay
 	/// </summary>
 	public string? MapName { get; set; }
 
-	public UnpackedReplay(ArenaInfo arenaInfo)
+	
+	public UnpackedReplay()
 	{
-		ArenaInfo = arenaInfo;
-		ClientVersion = Version.Parse(string.Join('.', ArenaInfo.ClientVersionFromExe.Split(',')[..3]));
+		
 	}
+	// public UnpackedReplay(ArenaInfo arenaInfo)
+	// {
+	// 	ArenaInfo = arenaInfo;
+	// 	ClientVersion = Version.Parse(string.Join('.', ArenaInfo.ClientVersionFromExe.Split(',')[..3]));
+	// }
 }

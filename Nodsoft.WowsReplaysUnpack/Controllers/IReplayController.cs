@@ -22,3 +22,10 @@ public interface IReplayController
 	/// <param name="options">Options to use when handling the packet.</param>
 	void HandleNetworkPacket(NetworkPacketBase networkPacket, ReplayUnpackerOptions options);
 }
+
+public interface IReplayController<out T> 
+	where T : UnpackedReplay
+{
+	T CreateUnpackedReplay(ArenaInfo arenaInfo);
+	void HandleNetworkPacket(NetworkPacketBase networkPacket, ReplayUnpackerOptions options);
+}

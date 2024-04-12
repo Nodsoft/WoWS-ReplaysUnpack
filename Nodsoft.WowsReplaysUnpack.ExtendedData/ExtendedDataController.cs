@@ -11,36 +11,45 @@ using System.Reflection;
 
 namespace Nodsoft.WowsReplaysUnpack.ExtendedData
 {
-	/// <summary>
-	/// Defines a non-generic implementation of the <see cref="ExtendedDataController{T}" />.
-	/// </summary>
-	public sealed class ExtendedDataController : ExtendedDataController<ExtendedDataController>
+	public partial class ExtendedDataController : ExtendedDataController<ExtendedDataReplay>
 	{
-		// ReSharper disable once ContextualLoggerProblem
-		public ExtendedDataController(VersionMappingFactory versionMappingFactory, IDefinitionStore definitionStore, ILogger<Entity> entityLogger)
-			: base(versionMappingFactory, definitionStore, entityLogger) { }
+		public ExtendedDataController(VersionMappingFactory versionMappingFactory,
+			IDefinitionStore definitionStore, ILogger<Entity> entityLogger) : base(versionMappingFactory,
+			definitionStore, entityLogger)
+		{
+		}
 	}
 
-	public class ExtendedDataController<TController> : ReplayControllerBase<TController>
-		where TController : class, IReplayController
+	// [MethodSubscription("Avatar", "onChatMessage", IncludePacketTime = true)]
+	public partial class ExtendedDataController<TReplay> : ReplayControllerBase<TReplay>
+		where TReplay : ExtendedDataReplay, new()
 	{
+		private partial void AvatarOnChatMessage(float packetTime, int entityId, string messageGroup, string messageContent,
+			string reserved1);
+
+		// // Source Gen
+		void CallClientMethod(string hash, float packetTime, int entityId,
+			object?[] arguments)
+		{
+			switch (hash)
+			{
+				case "AvatarOnChatMessage" when arguments.Length is 3 && arguments[0] is string messageGroup &&
+				                                 arguments[1] is string messageContent &&
+				                                 arguments[2] is string reserved1:
+					AvatarOnChatMessage(packetTime, entityId, messageGroup, messageContent, reserved1);
+					break;
+			}
+		}
+
 		private readonly VersionMappingFactory _versionMappingFactory;
 
-		static ExtendedDataController() => Unpickler.registerConstructor("CamouflageInfo", "CamouflageInfo", new CamouflageInfo());
+		static ExtendedDataController() =>
+			Unpickler.registerConstructor("CamouflageInfo", "CamouflageInfo", new CamouflageInfo());
 
-		public ExtendedDataController(VersionMappingFactory versionMappingFactory, IDefinitionStore definitionStore, ILogger<Entity> entityLogger)
+		public ExtendedDataController(VersionMappingFactory versionMappingFactory, IDefinitionStore definitionStore,
+			ILogger<Entity> entityLogger)
 			: base(definitionStore, entityLogger)
 			=> _versionMappingFactory = versionMappingFactory;
-
-		public ExtendedDataReplay ExtendedReplay => (ExtendedDataReplay)Replay;
-
-		/// <inheritdoc />
-		public override UnpackedReplay CreateUnpackedReplay(ArenaInfo arenaInfo)
-		{
-			Replay = new ExtendedDataReplay(arenaInfo);
-
-			return Replay;
-		}
 
 		/// <summary>
 		/// Triggered when a chat message is parsed from the replay.
@@ -51,9 +60,10 @@ namespace Nodsoft.WowsReplaysUnpack.ExtendedData
 		/// <param name="messageContent">The content of the message.</param>
 		/// <param name="reserved1">Parameter unused</param>
 		[MethodSubscription("Avatar", "onChatMessage", IncludePacketTime = true)]
-		public void OnChatMessage(float packetTime, int entityId, string messageGroup, string messageContent, string reserved1)
+		private partial void AvatarOnChatMessage(float packetTime, int entityId, string messageGroup, string messageContent,
+			string reserved1)
 		{
-			ExtendedReplay.ChatMessages.Add(new((uint)entityId, packetTime, messageGroup, messageContent));
+			Replay.ChatMessages.Add(new((uint)entityId, packetTime, messageGroup, messageContent));
 		}
 
 		/// <summary>
@@ -95,10 +105,11 @@ namespace Nodsoft.WowsReplaysUnpack.ExtendedData
 				}
 
 				PropertyInfo? propertyInfo = ReplayPlayer.PropertyInfos.SingleOrDefault(x => x.Name == propertyName);
-				propertyInfo?.SetValue(replayPlayer, Convert.ChangeType(propertyArray[1], propertyInfo.PropertyType), null);
+				propertyInfo?.SetValue(replayPlayer, Convert.ChangeType(propertyArray[1], propertyInfo.PropertyType),
+					null);
 			}
 
-			ExtendedReplay.ReplayPlayers.Add(replayPlayer);
+			Replay.ReplayPlayers.Add(replayPlayer);
 		}
 	}
 }

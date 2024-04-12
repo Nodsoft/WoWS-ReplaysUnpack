@@ -1,4 +1,5 @@
-﻿using Nodsoft.WowsReplaysUnpack.Services;
+﻿using Nodsoft.WowsReplaysUnpack.ExtendedData.Models;
+using Nodsoft.WowsReplaysUnpack.Services;
 
 namespace Nodsoft.WowsReplaysUnpack.ExtendedData;
 
@@ -9,5 +10,6 @@ public static class Extensions
 	/// </summary>
 	/// <param name="factory">The factory.</param>
 	/// <returns>The extended data unpacker service.</returns>
-	public static IReplayUnpackerService GetExtendedDataUnpacker(this ReplayUnpackerFactory factory) => factory.GetUnpacker<ExtendedDataController>();
+	public static IReplayUnpackerService<ExtendedDataReplay> GetExtendedDataUnpacker(this ReplayUnpackerFactory factory) => factory
+		.GetUnpacker<ExtendedDataReplay>();
 }

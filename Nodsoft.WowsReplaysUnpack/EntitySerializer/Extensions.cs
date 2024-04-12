@@ -6,7 +6,7 @@ public static class Extensions
 {
 	public static T SerializeEntity<T>(this UnpackedReplay replay, string entityName) where T : class
 	{
-		if (!replay.Entities.Any(e => e.Value.Name == entityName))
+		if (replay.Entities.All(e => e.Value.Name != entityName))
 		{
 			throw new InvalidOperationException("No entity found with name " + entityName);
 		}
@@ -15,7 +15,7 @@ public static class Extensions
 
 	public static T[] SerializeEntities<T>(this UnpackedReplay replay, string entityName) where T : class
 	{
-		if (!replay.Entities.Any(e => e.Value.Name == entityName))
+		if (replay.Entities.All(e => e.Value.Name != entityName))
 		{
 			throw new InvalidOperationException("No entity found with name " + entityName);
 		}

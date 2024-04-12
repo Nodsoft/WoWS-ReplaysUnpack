@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Nodsoft.WowsReplaysUnpack.Controllers;
 using Nodsoft.WowsReplaysUnpack.Core.Definitions;
+using Nodsoft.WowsReplaysUnpack.Core.Models;
 using Nodsoft.WowsReplaysUnpack.Services;
 
 namespace Nodsoft.WowsReplaysUnpack;
@@ -24,7 +25,7 @@ public class ReplayUnpackerBuilder
 	public ReplayUnpackerBuilder(IServiceCollection services)
 	{
 		Services = services;
-		AddReplayController<DefaultReplayController>();
+		AddReplayController<DefaultReplayController, UnpackedReplay>();
 	}
 
 	/// <summary>
@@ -43,11 +44,14 @@ public class ReplayUnpackerBuilder
 	/// Registers a <see cref="IReplayController" /> for use in the WOWS replay data unpacker.
 	/// </summary>
 	/// <typeparam name="TController">The type of the replay controller.</typeparam>
+	/// <typeparam name="TReplay"></typeparam>
 	/// <returns>The builder.</returns>
-	public ReplayUnpackerBuilder AddReplayController<TController>() where TController : class, IReplayController
+	public ReplayUnpackerBuilder AddReplayController<TController, TReplay>()
+		where TController : class, IReplayController<TReplay>
+		where TReplay : UnpackedReplay, new()
 	{
-		Services.AddScoped<ReplayUnpackerService<TController>>();
-		Services.AddScoped<TController>();
+		Services.AddScoped<ReplayUnpackerService<TReplay>>();
+		Services.AddScoped<IReplayController<TReplay>, TController>();
 		return this;
 	}
 
@@ -76,7 +80,7 @@ public class ReplayUnpackerBuilder
 	}
 
 
-  // stewie says: No need for that since they will be added either way if you don't add other ones
+	// stewie says: No need for that since they will be added either way if you don't add other ones
 	///// <summary>
 	///// Registers the Assembly definition loader and the default definition store for the WOWS replay data unpacker.
 	///// These are considered the default definition services for the unpacker.

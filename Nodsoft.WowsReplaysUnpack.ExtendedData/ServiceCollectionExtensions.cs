@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Nodsoft.WowsReplaysUnpack.ExtendedData.Models;
 using Nodsoft.WowsReplaysUnpack.ExtendedData.VersionMappings;
 using static Nodsoft.WowsReplaysUnpack.ServiceCollectionExtensions;
 
@@ -16,7 +17,7 @@ public static class ServiceCollectionExtensions
 	/// <returns>The replay unpacker builder.</returns>
 	public static ReplayUnpackerBuilder AddExtendedData(this ReplayUnpackerBuilder builder)
 	{
-		builder.AddReplayController<ExtendedDataController>();
+		builder.AddReplayController<ExtendedDataController, ExtendedDataReplay>();
 		builder.Services.AddSingleton<VersionMappingFactory>();
 
 		foreach (Type? versionMappingType in VersionMappingFactory.VersionMappingTypes)
