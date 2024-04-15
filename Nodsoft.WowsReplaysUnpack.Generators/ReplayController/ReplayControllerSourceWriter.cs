@@ -1,4 +1,4 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
@@ -8,19 +8,19 @@ internal static class ReplayControllerSourceWriter
 {
 	public static string NewMethod(ControllerToGenerate controller)
 	{
-		var methods = controller.Methods.GroupBy(m => $"{m.EntityName}_{m.MethodName}");
+		IEnumerable<IGrouping<string, MethodSubscriptionData>> methods = controller.Methods.GroupBy(m => $"{m.EntityName}_{m.MethodName}");
 
-		var sb = new StringBuilder(SourceGenerationHelper.Header).AppendLine();
+		StringBuilder sb = new StringBuilder(SourceGenerationHelper.Header).AppendLine();
 		sb.AppendLine("using Nodsoft.WowsReplaysUnpack.Core.Entities;");
 		sb.Append("namespace ").Append(controller.Namespace).AppendLine(";").AppendLine();
 
 		sb.Append("public partial class ").Append(controller.ClassName).AppendLine();
 		sb.AppendLine("{").AppendLine();
 
-		var isBaseController =
+		bool isBaseController =
 			controller.FullyQualifiedName is "Nodsoft.WowsReplaysUnpack.Controllers.ReplayControllerBase<T>";
 
-		var methodModifier = isBaseController ? "virtual" : "override";
+		string methodModifier = isBaseController ? "virtual" : "override";
 
 		if (controller.Methods.Count > 0)
 		{
@@ -30,16 +30,16 @@ internal static class ReplayControllerSourceWriter
 
 			if (!isBaseController)
 			{
-				sb.AppendLine("  base.CallSubscription(hash, entity, packetTime, arguments");
+				sb.AppendLine("    base.CallSubscription(hash, entity, packetTime, arguments);");
 			}
 
 			sb.AppendLine("    switch (hash)");
 			sb.AppendLine("    {");
 
-			foreach (var methodGroup in methods)
+			foreach (IGrouping<string, MethodSubscriptionData>? methodGroup in methods)
 			{
 				sb.AppendLine($"      case \"{methodGroup.Key}\":");
-				foreach (var sub in methodGroup.OrderBy(m => m.Priority ?? 999))
+				foreach (MethodSubscriptionData sub in methodGroup.OrderBy(m => m.Priority ?? 999))
 				{
 					sb.Append("        ").Append(sub.CallName).Append("(");
 
@@ -57,7 +57,9 @@ internal static class ReplayControllerSourceWriter
 					{
 						for (int i = 0; i < sub.ParameterTypes.Count; i++)
 						{
-							sb.Append($"({sub.ParameterTypes.ElementAt(i)})arguments.Values.ElementAt({i})");
+							string type = sub.ParameterTypes.ElementAt(i);
+							string postFix = type.EndsWith("?") ? string.Empty: "!";
+							sb.Append($"({sub.ParameterTypes.ElementAt(i)})arguments.Values.ElementAt({i}){postFix}");
 							if (i < sub.ParameterTypes.Count - 1)
 								sb.Append(", ");
 						}

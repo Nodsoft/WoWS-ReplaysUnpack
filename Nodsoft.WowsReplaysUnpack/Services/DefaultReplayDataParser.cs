@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using JetBrains.Annotations;
+using Microsoft.Extensions.Logging;
 using Nodsoft.WowsReplaysUnpack.Core.Models;
 using Nodsoft.WowsReplaysUnpack.Core.Network;
 using Nodsoft.WowsReplaysUnpack.Core.Network.Packets;
@@ -8,16 +9,19 @@ namespace Nodsoft.WowsReplaysUnpack.Services;
 /// <summary>
 /// Represents the default implementation for a data parser.
 /// </summary>
+[UsedImplicitly]
 public class DefaultReplayDataParser : IReplayDataParser
 {
 	private readonly ILogger<DefaultReplayDataParser> _logger;
 	private readonly MemoryStream _packetBuffer = new();
 	private readonly BinaryReader _packetBufferReader;
 
-	public DefaultReplayDataParser(ILogger<DefaultReplayDataParser> logger) => (_logger, _packetBufferReader) = (logger, new(_packetBuffer));
+	public DefaultReplayDataParser(ILogger<DefaultReplayDataParser> logger) =>
+		(_logger, _packetBufferReader) = (logger, new(_packetBuffer));
 
 	/// <inheritdoc />
-	public virtual IEnumerable<NetworkPacketBase> ParseNetworkPackets(MemoryStream replayDataStream, ReplayUnpackerOptions options, Version gameVersion)
+	public virtual IEnumerable<NetworkPacketBase> ParseNetworkPackets(MemoryStream replayDataStream,
+		ReplayUnpackerOptions options, Version gameVersion)
 	{
 		int packetIndex = 0;
 		using BinaryReader binaryReader = new(replayDataStream);
@@ -27,7 +31,8 @@ public class DefaultReplayDataParser : IReplayDataParser
 			uint packetType = binaryReader.ReadUInt32();
 			float packetTime = binaryReader.ReadSingle(); // Time in seconds from battle start
 
-			_logger.LogDebug("Packet parsed of type '{PacketType}' with size '{PacketSize}' and timestamp '{PacketTime}'",
+			_logger.LogDebug(
+				"Packet parsed of type '{PacketType}' with size '{PacketSize}' and timestamp '{PacketTime}'",
 				NetworkPacketTypes.GetTypeName(packetType, gameVersion), packetSize, packetTime);
 
 			byte[] packetData = binaryReader.ReadBytes((int)packetSize);
@@ -38,26 +43,11 @@ public class DefaultReplayDataParser : IReplayDataParser
 			_packetBuffer.Write(packetData);
 			_packetBuffer.Seek(0, SeekOrigin.Begin);
 
-			yield return PacketTypeMap.TryGetValue(NetworkPacketTypes.GetTypeName(packetType, gameVersion), out var packetTypeFunc)
+			yield return PacketTypeMap.TryGetValue(NetworkPacketTypes.GetTypeName(packetType, gameVersion),
+				out var packetTypeFunc)
 				? packetTypeFunc(packetIndex, packetTime, _packetBufferReader)
 				: new UnknownPacket(packetIndex, _packetBufferReader);
-			
-//			yield return packetType switch
-//			{
-//				0x0 => new BasePlayerCreatePacket(packetIndex, _packetBufferReader),
-//				NetworkPacketTypes.CellPlayerCreate => new CellPlayerCreatePacket(packetIndex, _packetBufferReader),
-//				NetworkPacketTypes.EntityControl => new EntityControlPacket(packetIndex, _packetBufferReader),
-//				NetworkPacketTypes.EntityEnter => new EntityEnterPacket(packetIndex, _packetBufferReader),
-//				NetworkPacketTypes.EntityLeave => new EntityLeavePacket(packetIndex, _packetBufferReader),
-//				NetworkPacketTypes.EntityCreate => new EntityCreatePacket(packetIndex, _packetBufferReader),
-//				NetworkPacketTypes.EntityProperty => new EntityPropertyPacket(packetIndex, _packetBufferReader),
-//				NetworkPacketTypes.EntityMethod => new EntityMethodPacket(packetIndex, packetTime, _packetBufferReader),
-//				NetworkPacketTypes.Map => new MapPacket(packetIndex, _packetBufferReader),
-//				NetworkPacketTypes.NestedProperty => new NestedPropertyPacket(packetIndex, _packetBufferReader),
-//				NetworkPacketTypes.Position => new PositionPacket(packetIndex, _packetBufferReader),
-//				NetworkPacketTypes.PlayerPosition => new PlayerPositionPacket(packetIndex, _packetBufferReader),
-//				_ => new UnknownPacket(packetIndex, _packetBufferReader)
-//			};
+
 			packetIndex++;
 		}
 	}
@@ -78,7 +68,7 @@ public class DefaultReplayDataParser : IReplayDataParser
 		{ "Position", static (index, _, reader) => new PositionPacket(index, reader) },
 		{ "PlayerPosition", static (index, _, reader) => new PlayerPositionPacket(index, reader) }
 	};
-	
+
 	/// <summary>
 	/// Disposes the data parser.
 	/// </summary>

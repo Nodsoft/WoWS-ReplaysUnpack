@@ -18,9 +18,8 @@ namespace Nodsoft.WowsReplaysUnpack.Controllers;
 /// <typeparam name="T"></typeparam>
 [PublicAPI]
 [ReplayController]
-public abstract partial class ReplayControllerBase<T> : IReplayController<T> where T: UnpackedReplay, new()
+public abstract partial class ReplayControllerBase<T> : IReplayController<T> where T : UnpackedReplay, new()
 {
-	
 	/// <summary>
 	/// Definition store used by the controller.
 	/// </summary>
@@ -35,17 +34,14 @@ public abstract partial class ReplayControllerBase<T> : IReplayController<T> whe
 	/// Unpacked replay being processed.
 	/// </summary>
 	public T Replay { get; protected set; } = null!;
-	
+
 	protected ReplayControllerBase(IDefinitionStore definitionStore, ILogger<Entity> entityLogger)
 		=> (DefinitionStore, EntityLogger) = (definitionStore, entityLogger);
 
 	/// <inheritdoc />
 	public T CreateUnpackedReplay(ArenaInfo arenaInfo)
 	{
-		Replay = new()
-		{
-			ArenaInfo = arenaInfo
-		};
+		Replay = new() { ArenaInfo = arenaInfo };
 		return Replay;
 	}
 
@@ -113,7 +109,7 @@ public abstract partial class ReplayControllerBase<T> : IReplayController<T> whe
 		{
 			return;
 		}
-		
+
 		using BinaryReader binaryReader = packet.Data.GetBinaryReader();
 		entity.SetInternalClientProperties(binaryReader);
 	}
@@ -147,7 +143,7 @@ public abstract partial class ReplayControllerBase<T> : IReplayController<T> whe
 		{
 			return;
 		}
-		
+
 		entity.SetPosition(packet.Position);
 	}
 
@@ -176,7 +172,8 @@ public abstract partial class ReplayControllerBase<T> : IReplayController<T> whe
 
 			slaveEntity.SetPosition(masterEntity.GetPosition());
 		}
-		else if (packet is { EntityId1: not 0, EntityId2: 0 } && Replay.Entities.TryGetValue(packet.EntityId1, out Entity? entity))
+		else if (packet is { EntityId1: not 0, EntityId2: 0 } &&
+		         Replay.Entities.TryGetValue(packet.EntityId1, out Entity? entity))
 		{
 			// This is a regular update for entity 1, without entity 2
 			entity.SetPosition(packet.Position);
@@ -193,7 +190,7 @@ public abstract partial class ReplayControllerBase<T> : IReplayController<T> whe
 		{
 			return;
 		}
-		
+
 		using BinaryReader methodDataReader = packet.Data.GetBinaryReader();
 		entity.CallClientMethod(packet.MessageId, packet.PacketTime, methodDataReader, this);
 	}
@@ -208,7 +205,7 @@ public abstract partial class ReplayControllerBase<T> : IReplayController<T> whe
 		{
 			return;
 		}
-		
+
 		using BinaryReader propertyData = packet.Data.GetBinaryReader();
 		entity.SetClientProperty(packet.MessageId, propertyData, this);
 	}
@@ -223,7 +220,7 @@ public abstract partial class ReplayControllerBase<T> : IReplayController<T> whe
 		{
 			return;
 		}
-		
+
 		packet.Apply(entity);
 	}
 
@@ -234,7 +231,7 @@ public abstract partial class ReplayControllerBase<T> : IReplayController<T> whe
 	/// <param name="name">The name of the entity.</param>
 	/// <returns>The entity object.</returns>
 	protected virtual Entity CreateEntity(uint id, string name)
-		=> new(id, name, DefinitionStore.GetEntityDefinition(Replay.ClientVersion, name), 
+		=> new(id, name, DefinitionStore.GetEntityDefinition(Replay.ClientVersion, name),
 			// _methodSubscriptions,
 			// _propertyChangedSubscriptions, 
 			EntityLogger);
@@ -248,7 +245,7 @@ public abstract partial class ReplayControllerBase<T> : IReplayController<T> whe
 	protected virtual Entity CreateEntity(uint id, int index)
 	{
 		EntityDefinition definition = DefinitionStore.GetEntityDefinition(Replay.ClientVersion, index - 1);
-		return new(id, definition.Name, definition, 
+		return new(id, definition.Name, definition,
 			// _methodSubscriptions, 
 			// _propertyChangedSubscriptions, 
 			EntityLogger);
@@ -258,35 +255,22 @@ public abstract partial class ReplayControllerBase<T> : IReplayController<T> whe
 
 	#region Subscriptions
 
-	// /// <summary>
-	// /// Triggered when a CVE is handled by <see cref="HandleNetworkPacket"/>.
-	// /// </summary>
-	// /// <param name="arguments">The arguments.</param>
-	// [MethodSubscription("Avatar", "onArenaStateReceived", ParamsAsDictionary = true)]
-	// public void OnArenaStateReceivedCVECheck(Dictionary<string, object?> arguments)
-	// {
-	// 	var x = arguments.Values.ElementAt(0);
-	// 	CveChecks.ScanForCVE_2022_31265((byte[])arguments["preBattlesInfo"]!,
-	// 		"Avatar_onArenaStateReceived_preBattlesInfo");
-	// 	CveChecks.ScanForCVE_2022_31265((byte[])arguments["playersStates"]!,
-	// 		"Avatar_onArenaStateReceived_playersStates");
-	// 	CveChecks.ScanForCVE_2022_31265((byte[])arguments["observersState"]!,
-	// 		"Avatar_onArenaStateReceived_observersState");
-	// 	CveChecks.ScanForCVE_2022_31265((byte[])arguments["buildingsInfo"]!,
-	// 		"Avatar_onArenaStateReceived_buildingsInfo");
-	// }
-	
-	[MethodSubscription("Avatar", "onArenaStateReceived", IncludeEntity = true, IncludePacketTime = true)]
-	public void OnArenaStateReceivedCVECheck2(Entity entity, float packetTime, byte[]? preBattlesInfo, byte[]? playersStates)
+	/// <summary>
+	/// Triggered when a CVE is handled by <see cref="HandleNetworkPacket"/>.
+	/// </summary>
+	/// <param name="arguments">The arguments.</param>
+	[MethodSubscription("Avatar", "onArenaStateReceived", ParamsAsDictionary = true)]
+	public void OnArenaStateReceivedCVECheck(Dictionary<string, object?> arguments)
 	{
-		// CveChecks.ScanForCVE_2022_31265((byte[])arguments["preBattlesInfo"]!,
-		// 	"Avatar_onArenaStateReceived_preBattlesInfo");
-		// CveChecks.ScanForCVE_2022_31265((byte[])arguments["playersStates"]!,
-		// 	"Avatar_onArenaStateReceived_playersStates");
-		// CveChecks.ScanForCVE_2022_31265((byte[])arguments["observersState"]!,
-		// 	"Avatar_onArenaStateReceived_observersState");
-		// CveChecks.ScanForCVE_2022_31265((byte[])arguments["buildingsInfo"]!,
-		// 	"Avatar_onArenaStateReceived_buildingsInfo");
+		var x = arguments.Values.ElementAt(0);
+		CveChecks.ScanForCVE_2022_31265((byte[])arguments["preBattlesInfo"]!,
+			"Avatar_onArenaStateReceived_preBattlesInfo");
+		CveChecks.ScanForCVE_2022_31265((byte[])arguments["playersStates"]!,
+			"Avatar_onArenaStateReceived_playersStates");
+		CveChecks.ScanForCVE_2022_31265((byte[])arguments["observersState"]!,
+			"Avatar_onArenaStateReceived_observersState");
+		CveChecks.ScanForCVE_2022_31265((byte[])arguments["buildingsInfo"]!,
+			"Avatar_onArenaStateReceived_buildingsInfo");
 	}
 
 	#endregion

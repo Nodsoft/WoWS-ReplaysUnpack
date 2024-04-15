@@ -1,5 +1,4 @@
-﻿using Nodsoft.WowsReplaysUnpack.Controllers;
-using Nodsoft.WowsReplaysUnpack.Core;
+﻿using Nodsoft.WowsReplaysUnpack.Core;
 using Nodsoft.WowsReplaysUnpack.Core.Abstractions;
 using Nodsoft.WowsReplaysUnpack.Core.Exceptions;
 using Nodsoft.WowsReplaysUnpack.Core.Extensions;
@@ -23,7 +22,6 @@ public sealed class ReplayUnpackerService<TReplay> : ReplayUnpackerService, IRep
 	private readonly JsonSerializerOptions _jsonSerializerOptions = new() { PropertyNameCaseInsensitive = true };
 	private readonly IReplayDataParser _replayDataParser;
 	private readonly IReplayController<TReplay> _replayController;
-	private static readonly SemaphoreSlim _semaphore = new(1);
 	private const int _semephoreTimeOut = 2000;
 
 	public ReplayUnpackerService(IReplayDataParser replayDataParser, IReplayController<TReplay> replayController)
@@ -73,13 +71,13 @@ public sealed class ReplayUnpackerService<TReplay> : ReplayUnpackerService, IRep
 		See http://wiki.vbaddict.net/pages/File_Replays for more details.
 		*/
 		options ??= new();
-		_semaphore.Wait(_semephoreTimeOut);
+		Semaphore.Wait(_semephoreTimeOut);
 		BinaryReader binaryReader = new(stream);
 
 		byte[] signature = binaryReader.ReadBytes(4);
 		int jsonBlockCount = binaryReader.ReadInt32();
 
-		_semaphore.Release();
+		Semaphore.Release();
 		// Verify replay signature
 		if (!signature.SequenceEqual(ReplaySignature))
 		{
@@ -90,13 +88,13 @@ public sealed class ReplayUnpackerService<TReplay> : ReplayUnpackerService, IRep
 		// Read it and create the unpacked replay model
 		ArenaInfo arenaInfo = ReadJsonBlock<ArenaInfo>(binaryReader);
 		TReplay replay = _replayController.CreateUnpackedReplay(arenaInfo);
-		_semaphore.Wait(_semephoreTimeOut);
+		Semaphore.Wait(_semephoreTimeOut);
 		ReadExtraJsonBlocks(replay, binaryReader, jsonBlockCount);
 
 		MemoryStream decryptedStream = new();
 		Decrypt(binaryReader, decryptedStream);
 
-		_semaphore.Release();
+		Semaphore.Release();
 		// Initial stream and reader not used anymore
 		binaryReader.Dispose();
 
@@ -107,27 +105,29 @@ public sealed class ReplayUnpackerService<TReplay> : ReplayUnpackerService, IRep
 		decryptedStream.Dispose();
 
 		Version gameclientVersion = Version.Parse(arenaInfo.ClientVersionFromExe.Replace(',', '.'));
-		_semaphore.Wait(_semephoreTimeOut);
+		Semaphore.Wait(_semephoreTimeOut);
 		foreach (NetworkPacketBase networkPacket in _replayDataParser.ParseNetworkPackets(replayDataStream, options, gameclientVersion))
 		{
 			_replayController.HandleNetworkPacket(networkPacket, options);
 		}
-		_semaphore.Release();
+		Semaphore.Release();
 		return replay;
 	}
 
 	private void ReadExtraJsonBlocks(UnpackedReplay replay, BinaryReader binaryReader, int jsonBlockCount)
 	{
-		if (jsonBlockCount > 1)
+		if (jsonBlockCount <= 1)
 		{
-			for (int i = 0; i < jsonBlockCount - 1; i++)
+			return;
+		}
+
+		for (int i = 0; i < jsonBlockCount - 1; i++)
+		{
+			if (ReadJsonBlock<JsonElement?>(binaryReader) is { } jsonElement)
 			{
-				if (ReadJsonBlock<JsonElement?>(binaryReader) is { } jsonElement)
-				{
-					replay.ExtraJsonData.Add(jsonElement);
-				}
-				
+				replay.ExtraJsonData.Add(jsonElement);
 			}
+				
 		}
 	}
 
@@ -205,8 +205,9 @@ public sealed class ReplayUnpackerService<TReplay> : ReplayUnpackerService, IRep
 public class ReplayUnpackerService
 {
 	private static readonly byte[] BlowfishKey = "\x29\xB7\xC9\x09\x38\x3F\x84\x88\xFA\x98\xEC\x4E\x13\x19\x79\xFB".Select(Convert.ToByte).ToArray();
-	protected static readonly byte[] ReplaySignature = Encoding.UTF8.GetBytes("\x12\x32\x34\x11");
+	protected static readonly byte[] ReplaySignature = "\x12\x32\x34\x11"u8.ToArray();
 	protected static readonly Blowfish Blowfish = new(BlowfishKey);
+	protected static readonly SemaphoreSlim Semaphore = new(1);
 
 	private protected ReplayUnpackerService() { }
 }

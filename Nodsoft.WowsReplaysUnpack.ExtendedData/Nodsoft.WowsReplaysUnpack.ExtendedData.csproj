@@ -13,6 +13,8 @@
 
     <ItemGroup>
         <ProjectReference Include="../Nodsoft.WowsReplaysUnpack/Nodsoft.WowsReplaysUnpack.csproj" />
+        <ProjectReference Include="..\Nodsoft.WowsReplaysUnpack.Generators\Nodsoft.WowsReplaysUnpack.Generators.csproj"
+                          OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="All"/>
     </ItemGroup>
 
 </Project>
