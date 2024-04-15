@@ -7,7 +7,7 @@ namespace Nodsoft.WowsReplaysUnpack.Core.Definitions;
 /// <summary>
 /// Base class for all definitions (.def) files.
 /// </summary>
-public abstract record BaseDefinition
+public abstract class BaseDefinition
 {
 	/// <summary>
 	/// Game client version of this definition file.
@@ -18,7 +18,7 @@ public abstract record BaseDefinition
 	/// Definition store for this definition.
 	/// </summary>
 	protected IDefinitionStore DefinitionStore { get; }
-
+	
 	/// <summary>
 	/// Name of this definition file.
 	/// </summary>
@@ -28,20 +28,19 @@ public abstract record BaseDefinition
 	/// Represents all volatile properties in this definition file.
 	/// </summary>
 	public Dictionary<string, object> VolatileProperties { get; } = new();
-
+	
 	private readonly List<PropertyDefinition> _properties = new();
 	private readonly string _folder;
+	protected XmlElement? XmlDocument { get; set; }
 
 	protected BaseDefinition(Version clientVersion, IDefinitionStore definitionStore, string name, string folder)
 	{
 		ClientVersion = clientVersion;
 		DefinitionStore = definitionStore;
 		Name = name;
+		XmlDocument = DefinitionStore.GetFileAsXml(ClientVersion, Name + ".def", folder).DocumentElement!;
 		_folder = folder;
-
-		ParseDefinitionFile(DefinitionStore.GetFileAsXml(ClientVersion, Name + ".def", _folder).DocumentElement!);
 	}
-
 	
 	public PropertyDefinition[] GetPropertiesByFlags(EntityFlag entityFlag, bool orderBySize = false)
 	{

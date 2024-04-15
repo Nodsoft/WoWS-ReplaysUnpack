@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using JetBrains.Annotations;
+using Microsoft.Extensions.DependencyInjection;
 using Nodsoft.WowsReplaysUnpack.Controllers;
 using Nodsoft.WowsReplaysUnpack.Core.Abstractions;
 using Nodsoft.WowsReplaysUnpack.Core.Definitions;
@@ -10,6 +11,7 @@ namespace Nodsoft.WowsReplaysUnpack;
 /// <summary>
 /// Provides a fluent API to build a WOWS replay data unpacker.
 /// </summary>
+[PublicAPI]
 public class ReplayUnpackerBuilder
 {
 	private bool replayDataParserAdded;
@@ -19,7 +21,7 @@ public class ReplayUnpackerBuilder
 	public IServiceCollection Services { get; }
 
 	/// <summary>
-	/// Intializes a new instance of the <see cref="ReplayUnpackerBuilder" /> class,
+	/// Initializes a new instance of the <see cref="ReplayUnpackerBuilder" /> class,
 	/// by registering a <see cref="ReplayUnpackerService" /> as baseline.
 	/// </summary>
 	/// <param name="services"></param>
@@ -36,7 +38,7 @@ public class ReplayUnpackerBuilder
 	/// <returns>The builder.</returns>
 	public ReplayUnpackerBuilder WithReplayDataParser<TParser>() where TParser : class, IReplayDataParser
 	{
-		Services.AddScoped<IReplayDataParser, TParser>();
+		Services.AddTransient<IReplayDataParser, TParser>();
 		replayDataParserAdded = true;
 		return this;
 	}
@@ -51,7 +53,7 @@ public class ReplayUnpackerBuilder
 		where TController : class, IReplayController<TReplay>
 		where TReplay : UnpackedReplay, new()
 	{
-		Services.AddScoped<ReplayUnpackerService<TReplay>>();
+		Services.AddScoped<IReplayUnpackerService<TReplay>, ReplayUnpackerService<TReplay>>();
 		Services.AddScoped<IReplayController<TReplay>, TController>();
 		return this;
 	}
@@ -79,22 +81,7 @@ public class ReplayUnpackerBuilder
 		definitionStoreAdded = true;
 		return this;
 	}
-
-
-	// stewie says: No need for that since they will be added either way if you don't add other ones
-	///// <summary>
-	///// Registers the Assembly definition loader and the default definition store for the WOWS replay data unpacker.
-	///// These are considered the default definition services for the unpacker.
-	///// </summary>
-	///// <param name="builder">The replay unpacker builder.</param>
-	///// <returns>The service collection.</returns>
-	//public static ReplayUnpackerBuilder WithDefaultDefinitions(this ReplayUnpackerBuilder builder)
-	//{
-	//	builder.WithDefinitionLoader<AssemblyDefinitionLoader>();
-	//	builder.WithDefinitionStore<DefaultDefinitionStore>();
-	//	return builder;
-	//}
-
+	
 	/// <summary>
 	/// Builds the WOWS replay data unpacker, registering any missing services.
 	/// </summary>

@@ -1,8 +1,12 @@
-﻿using Nodsoft.WowsReplaysUnpack.Core.Extensions;
+﻿using JetBrains.Annotations;
+using Nodsoft.WowsReplaysUnpack.Core.Extensions;
 using System.Reflection;
 using System.Xml;
 
 namespace Nodsoft.WowsReplaysUnpack.Core.Definitions;
+
+[UsedImplicitly]
+[PublicAPI]
 public class AssemblyDefinitionLoader : IDefinitionLoader
 {
 	private static readonly XmlReaderSettings _xmlReaderSettings = new() { IgnoreComments = true };
@@ -10,19 +14,13 @@ public class AssemblyDefinitionLoader : IDefinitionLoader
 	/// <summary>
 	/// Assembly of the Definition store (defaults to the implementation assembly).
 	/// </summary>
-	protected readonly Assembly Assembly;
+	protected Assembly Assembly { get; set; } = typeof(DefaultDefinitionStore).Assembly;
 
 	/// <summary>
 	/// Version -> Definitions Directory
 	/// </summary>
-	protected readonly Dictionary<string, DefinitionDirectory> DirectoryCache = new();
-
-	public AssemblyDefinitionLoader()
-	{
-
-		Assembly = typeof(DefaultDefinitionStore).Assembly;
-	}
-
+	protected Dictionary<string, DefinitionDirectory> DirectoryCache { get; set; } = new();
+	
 	/// <inheritdoc />
 	public Version[] GetSupportedVersions()
 	{
