@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Nodsoft.WowsReplaysUnpack.ExtendedData.Models;
 using Nodsoft.WowsReplaysUnpack.ExtendedData.VersionMappings;
-using static Nodsoft.WowsReplaysUnpack.ServiceCollectionExtensions;
 
 namespace Nodsoft.WowsReplaysUnpack.ExtendedData;
 

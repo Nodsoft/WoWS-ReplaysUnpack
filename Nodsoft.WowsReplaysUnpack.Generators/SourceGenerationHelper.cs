@@ -18,5 +18,5 @@ public static class SourceGenerationHelper
 namespace Nodsoft.WowsReplaysUnpack.Generators;
 
 [global::System.AttributeUsage(global::System.AttributeTargets.Class)]
-public class ReplayControllerAttribute : global::System.Attribute;";
+internal class ReplayControllerAttribute : global::System.Attribute;";
 }

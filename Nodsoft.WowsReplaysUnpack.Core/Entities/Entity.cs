@@ -2,11 +2,8 @@
 using Microsoft.Extensions.Logging;
 using Nodsoft.WowsReplaysUnpack.Core.Abstractions;
 using Nodsoft.WowsReplaysUnpack.Core.Definitions;
-using Nodsoft.WowsReplaysUnpack.Core.Exceptions;
 using Nodsoft.WowsReplaysUnpack.Core.Network.Packets;
 using System.Numerics;
-using System.Reflection;
-using System.Text;
 
 namespace Nodsoft.WowsReplaysUnpack.Core.Entities;
 
@@ -94,7 +91,7 @@ public class Entity
 	/// </summary>
 	public Vector3 VPosition
 	{
-		get => VolatileProperties.ContainsKey("position") ? (Vector3)VolatileProperties["position"] : new();
+		get => VolatileProperties.TryGetValue("position", out object? value) ? (Vector3)value : new();
 		set => VolatileProperties["position"] = value;
 	}
 
@@ -103,7 +100,7 @@ public class Entity
 	/// </summary>
 	public float Yaw
 	{
-		get => VolatileProperties.ContainsKey("yaw") ? (float)VolatileProperties["yaw"] : 0f;
+		get => VolatileProperties.TryGetValue("yaw", out object? value) ? (float)value : 0f;
 		set => VolatileProperties["yaw"] = value;
 	}
 
@@ -112,7 +109,7 @@ public class Entity
 	/// </summary>
 	public float Pitch
 	{
-		get => VolatileProperties.ContainsKey("pitch") ? (float)VolatileProperties["pitch"] : 0f;
+		get => VolatileProperties.TryGetValue("pitch", out object? value) ? (float)value : 0f;
 		set => VolatileProperties["pitch"] = value;
 	}
 
@@ -121,7 +118,7 @@ public class Entity
 	/// </summary>
 	public float Roll
 	{
-		get => VolatileProperties.ContainsKey("roll") ? (float)VolatileProperties["roll"] : 0f;
+		get => VolatileProperties.TryGetValue("roll", out object? value) ? (float)value : 0f;
 		set => VolatileProperties["roll"] = value;
 	}
 
@@ -174,13 +171,9 @@ public class Entity
 	/// <param name="packetTime">Time of the packet.</param>
 	/// <param name="reader">Packet binary reader.</param>
 	/// <param name="subscriptionTarget">Subscription target (Shouldn't be null).</param>
-	public virtual void CallClientMethod(uint index, float packetTime, BinaryReader reader, object? subscriptionTarget)
+	public virtual void CallClientMethod(uint index, float packetTime, BinaryReader reader,
+		IReplayController subscriptionTarget)
 	{
-		if (subscriptionTarget is null)
-		{
-			return;
-		}
-
 		EntityMethodDefinition? methodDefinition = MethodDefinitions.ElementAtOrDefault((int)index);
 
 		if (methodDefinition is null)
@@ -193,23 +186,19 @@ public class Entity
 
 		string hash = $"{Name}_{methodDefinition.Name}";
 
-		if (subscriptionTarget is not IReplayController controller)
-		{
-			return;
-		}
 
 		Dictionary<string, object?> arguments =
 			methodDefinition.Arguments.ToDictionary(a => a.Name, a => a.GetValue(reader));
 
 		try
 		{
-			controller.CallSubscription(hash, this, packetTime, arguments);
+			subscriptionTarget.CallSubscription(hash, this, packetTime, arguments);
 		}
 		catch (Exception exception) when (exception is ArgumentOutOfRangeException or InvalidCastException)
 		{
 			var expectedParameters = methodDefinition.Arguments.Select(a => new { Type = a.DataType.ClrType, a.Name })
 				.ToArray();
-			
+
 			Logger.LogError(exception, """
 			                           Arguments of method definition and method subscription do not match
 			                           Entity Name: {entityName}
@@ -228,60 +217,29 @@ public class Entity
 	/// <param name="index">Exposed index of the property.</param>
 	/// <param name="reader">Binary reader to read the value from.</param>
 	/// <param name="subscriptionTarget">Target object to set the property on.</param>
-	public virtual void SetClientProperty(uint index, BinaryReader reader, object? subscriptionTarget)
+	public virtual void SetClientProperty(uint index, BinaryReader reader, IReplayController subscriptionTarget)
 	{
 		Logger.LogDebug("Setting client property with index {Index} on entity {Name} ({Id})", index, Name, Id);
 		PropertyDefinition propertyDefinition = ClientPropertyDefinitions[index];
 		object? propertyValue = propertyDefinition.GetValue(reader, propertyDefinition.XmlNode);
 		ClientProperties[propertyDefinition.Name] = propertyValue;
-
-		if (subscriptionTarget is null)
-		{
-			return;
-		}
-
+		
 		string hash = $"{Name}_{propertyDefinition.Name}";
-
-		// if (PropertyChangedSubscriptions.TryGetValue(hash, out MethodInfo[]? methodInfos))
-		// {
-		// 	foreach (MethodInfo methodInfo in methodInfos)
-		// 	{
-		// 		ParameterInfo[] methodParameters = methodInfo.GetParameters();
-		//
-		// 		if (methodParameters.Length is not 2
-		// 		    || methodParameters[0].ParameterType != typeof(Entity)
-		// 		    || methodParameters[1].ParameterType != propertyDefinition.DataType.ClrType
-		// 		   )
-		// 		{
-		// 			StringBuilder sb =
-		// 				new StringBuilder(
-		// 						"Arguments of property definition and property changed subscription does not match")
-		// 					.AppendLine()
-		// 					.Append("Property Name: ")
-		// 					.AppendLine(propertyDefinition.Name)
-		// 					.Append("Subscription Name: ")
-		// 					.AppendLine(methodInfo.Name)
-		// 					.Append("Expected Arguments: ")
-		// 					.AppendLine($"Entity entity, {propertyDefinition.DataType.ClrType.Name} value")
-		// 					.Append("Actual Parameters: ")
-		// 					.AppendLine(string.Join(", ",
-		// 						methodParameters.Select(a => $"{a.ParameterType.Name} {a.Name}")));
-		// 			Logger.LogError(sb.ToString());
-		//
-		// 			return;
-		// 		}
-		//
-		// 		try
-		// 		{
-		// 			Logger.LogDebug("Calling property changed subscription with hash {Hash}", hash);
-		// 			methodInfo.Invoke(subscriptionTarget, new[] { this, propertyValue });
-		// 		}
-		// 		catch (Exception ex)
-		// 		{
-		// 			Logger.LogError(ex, "Error when calling property changed subscription with hash {Hash}", hash);
-		// 		}
-		// 	}
-		// }
+		try
+		{
+			subscriptionTarget.PropertyChanged(hash, this, propertyValue);
+		}
+		catch (InvalidCastException exception)
+		{
+			Logger.LogError(exception, """
+			                           Parameter type of property changed subscription does not match
+			                           Entity Name: {entityName}
+			                           Method Name: {methodName}
+			                           Expected Parameter: {expectedParameter}
+			                           """,
+				Name,
+				propertyDefinition.Name, propertyDefinition.DataType.ClrType);
+		}
 	}
 
 	/// <summary>

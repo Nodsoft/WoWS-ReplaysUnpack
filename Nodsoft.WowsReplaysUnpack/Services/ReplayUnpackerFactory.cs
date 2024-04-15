@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Nodsoft.WowsReplaysUnpack.Controllers;
 using Nodsoft.WowsReplaysUnpack.Core.Models;
 
 namespace Nodsoft.WowsReplaysUnpack.Services;

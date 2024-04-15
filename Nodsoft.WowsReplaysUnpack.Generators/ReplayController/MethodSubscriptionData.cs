@@ -1,7 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-
-namespace Nodsoft.WowsReplaysUnpack.Generators.ReplayController;
+﻿namespace Nodsoft.WowsReplaysUnpack.Generators.ReplayController;
 
 public record struct MethodSubscriptionData
 {

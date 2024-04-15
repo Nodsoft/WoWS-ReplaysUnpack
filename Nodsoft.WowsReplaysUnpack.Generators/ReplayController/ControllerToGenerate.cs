@@ -8,15 +8,17 @@ public record struct ControllerToGenerate
 	public readonly string Namespace;
 
 	public readonly EquatableArray<MethodSubscriptionData> Methods;
-	// public readonly EquatableArray<MethodSubscriptionData> Properties;
+	public readonly EquatableArray<PropertyChangedSubscriptionData> Properties;
 
 	public ControllerToGenerate(string name, string className, string fullyQualifiedName, string @namespace,
-		MethodSubscriptionData[] methods)
+		MethodSubscriptionData[] methods,
+		PropertyChangedSubscriptionData[] properties)
 	{
 		Name = name;
 		ClassName = className;
 		FullyQualifiedName = fullyQualifiedName;
 		Namespace = @namespace;
 		Methods = new EquatableArray<MethodSubscriptionData>(methods);
+		Properties = new EquatableArray<PropertyChangedSubscriptionData>(properties);
 	}
 }

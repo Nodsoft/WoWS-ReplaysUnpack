@@ -262,7 +262,6 @@ public abstract partial class ReplayControllerBase<T> : IReplayController<T> whe
 	[MethodSubscription("Avatar", "onArenaStateReceived", ParamsAsDictionary = true)]
 	public void OnArenaStateReceivedCVECheck(Dictionary<string, object?> arguments)
 	{
-		var x = arguments.Values.ElementAt(0);
 		CveChecks.ScanForCVE_2022_31265((byte[])arguments["preBattlesInfo"]!,
 			"Avatar_onArenaStateReceived_preBattlesInfo");
 		CveChecks.ScanForCVE_2022_31265((byte[])arguments["playersStates"]!,
@@ -272,6 +271,5 @@ public abstract partial class ReplayControllerBase<T> : IReplayController<T> whe
 		CveChecks.ScanForCVE_2022_31265((byte[])arguments["buildingsInfo"]!,
 			"Avatar_onArenaStateReceived_buildingsInfo");
 	}
-
 	#endregion
 }

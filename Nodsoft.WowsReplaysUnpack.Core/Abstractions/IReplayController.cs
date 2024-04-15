@@ -19,12 +19,20 @@ public interface IReplayController
 	/// <summary>
 	/// Handles calls to method or property subscriptions
 	/// </summary>
-	/// <param name="hash">The has of the subscription</param>
+	/// <param name="hash">The hash of the subscription</param>
 	/// <param name="entity">The entity the method is called for</param>
 	/// <param name="packetTime">The timestamp of the network packet</param>
 	/// <param name="arguments">The arguments for the subscription</param>
 	void CallSubscription(string hash, Entity entity, float packetTime,
 		Dictionary<string, object?> arguments);
+
+	/// <summary>
+	/// Handles calls when a property on an entity has changed
+	/// </summary>
+	/// <param name="hash">The hash of the subscription</param>
+	/// <param name="entity">The entity the property is changed on</param>
+	/// <param name="value">The property value</param>
+	void PropertyChanged(string hash, Entity entity, object? value);
 }
 
 public interface IReplayController<out T> : IReplayController

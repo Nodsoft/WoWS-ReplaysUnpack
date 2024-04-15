@@ -5,8 +5,6 @@ using Microsoft.Extensions.Logging;
 using Nodsoft.WowsReplaysUnpack;
 using Nodsoft.WowsReplaysUnpack.Core.Models;
 using Nodsoft.WowsReplaysUnpack.EntitySerializer;
-using Nodsoft.WowsReplaysUnpack.ExtendedData;
-using Nodsoft.WowsReplaysUnpack.ExtendedData.Models;
 using Nodsoft.WowsReplaysUnpack.FileStore.Definitions;
 using Nodsoft.WowsReplaysUnpack.Services;
 using System;

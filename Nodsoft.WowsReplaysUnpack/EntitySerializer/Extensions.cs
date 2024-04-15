@@ -1,7 +1,4 @@
-﻿using Nodsoft.WowsReplaysUnpack.Core.Entities;
-using Nodsoft.WowsReplaysUnpack.Core.Models;
-
-namespace Nodsoft.WowsReplaysUnpack.EntitySerializer;
+﻿namespace Nodsoft.WowsReplaysUnpack.EntitySerializer;
 public static class Extensions
 {
 	// public static T SerializeEntity<T>(this UnpackedReplay replay, string entityName) where T : class
