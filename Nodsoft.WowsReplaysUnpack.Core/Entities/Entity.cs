@@ -1,5 +1,6 @@
 ﻿using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
+using Nodsoft.WowsReplaysUnpack.Core.Abstractions;
 using Nodsoft.WowsReplaysUnpack.Core.Definitions;
 using Nodsoft.WowsReplaysUnpack.Core.Exceptions;
 using Nodsoft.WowsReplaysUnpack.Core.Network.Packets;
@@ -24,16 +25,6 @@ public class Entity
 	/// Definition of the entity.
 	/// </summary>
 	protected EntityDefinition EntityDefinition { get; }
-
-	/// <summary>
-	/// Methods subscribed to the entity.
-	/// </summary>
-	protected Dictionary<string, MethodInfo[]> MethodSubscriptions { get; }
-
-	/// <summary>
-	/// Methods subscribed to the entity's property changes.
-	/// </summary>
-	protected Dictionary<string, MethodInfo[]> PropertyChangedSubscriptions { get; }
 
 	/// <summary>
 	/// Definitions of the entity's properties, as scoped for public use from the client.
@@ -135,15 +126,11 @@ public class Entity
 	}
 
 	public Entity(uint id, string name, EntityDefinition entityDefinition,
-		// Dictionary<string, MethodInfo[]> methodSubscriptions,
-		// Dictionary<string, MethodInfo[]> propertyChangedSubscriptions,
 		ILogger<Entity> logger)
 	{
 		Id = id;
 		Name = name;
 		EntityDefinition = entityDefinition;
-		// MethodSubscriptions = methodSubscriptions;
-		// PropertyChangedSubscriptions = propertyChangedSubscriptions;
 		Logger = logger;
 		VolatileProperties = EntityDefinition.VolatileProperties.ToDictionary(kv => kv.Key, kv => kv.Value);
 
@@ -206,145 +193,33 @@ public class Entity
 
 		string hash = $"{Name}_{methodDefinition.Name}";
 
-		if (MethodSubscriptions.TryGetValue(hash, out MethodInfo[]? methodInfos))
-		{
-			foreach (MethodInfo methodInfo in methodInfos)
-			{
-				MethodSubscriptionAttribute attribute = methodInfo.GetCustomAttribute<MethodSubscriptionAttribute>()!;
-
-				if (attribute.ParamsAsDictionary)
-				{
-					CallClientMethodWithDictionary(reader, packetTime, subscriptionTarget, methodDefinition, hash,
-						methodInfo, attribute);
-				}
-				else
-				{
-					CallClientMethodWithParameters(reader, packetTime, subscriptionTarget, methodDefinition, hash,
-						methodInfo, attribute);
-				}
-
-				reader.BaseStream.Seek(0, SeekOrigin.Begin);
-			}
-		}
-	}
-
-	private void CallClientMethodWithParameters(BinaryReader reader, float packetTime, object? subscriptionTarget,
-		EntityMethodDefinition methodDefinition, string hash, MethodBase methodInfo,
-		MethodSubscriptionAttribute attribute)
-	{
-		if (!ValidateParameterTypes(methodDefinition, methodInfo, attribute))
+		if (subscriptionTarget is not IReplayController controller)
 		{
 			return;
 		}
 
-		try
-		{
-			IEnumerable<object?> methodArgumentValues = methodDefinition.Arguments.Select(a => a.GetValue(reader));
-
-			if (attribute.IncludeEntity)
-			{
-				methodArgumentValues = methodArgumentValues.Prepend(this);
-			}
-
-			if (attribute.IncludePacketTime)
-			{
-				methodArgumentValues = methodArgumentValues.Prepend(packetTime);
-			}
-
-			Logger.LogDebug("Calling method subscription with hash {Hash}", hash);
-			methodInfo.Invoke(subscriptionTarget, methodArgumentValues.ToArray());
-		}
-		catch (Exception ex)
-		{
-			if (ex.InnerException is CveSecurityException)
-			{
-				throw ex.InnerException;
-			}
-
-			Logger.LogError(ex, "Error when calling method subscription with hash {Hash}", hash);
-		}
-	}
-
-	private void CallClientMethodWithDictionary(BinaryReader reader, float packetTime, object? subscriptionTarget,
-		EntityMethodDefinition methodDefinition, string hash, MethodBase methodInfo,
-		MethodSubscriptionAttribute attribute)
-	{
-		if (!ValidateParameterTypes(methodDefinition, methodInfo, attribute))
-		{
-			return;
-		}
+		Dictionary<string, object?> arguments =
+			methodDefinition.Arguments.ToDictionary(a => a.Name, a => a.GetValue(reader));
 
 		try
 		{
-			IEnumerable<object> methodArgumentValues = new object[]
-			{
-				methodDefinition.Arguments.ToDictionary(a => a.Name, a => a.GetValue(reader))
-			};
-
-			if (attribute.IncludeEntity)
-			{
-				methodArgumentValues = methodArgumentValues.Prepend(this);
-			}
-
-			if (attribute.IncludePacketTime)
-			{
-				methodArgumentValues = methodArgumentValues.Prepend(packetTime);
-			}
-
-			Logger.LogDebug("Calling method subscription with hash {Hash}", hash);
-			methodInfo.Invoke(subscriptionTarget, methodArgumentValues.ToArray());
+			controller.CallSubscription(hash, this, packetTime, arguments);
 		}
-		catch (Exception ex)
+		catch (Exception exception) when (exception is ArgumentOutOfRangeException or InvalidCastException)
 		{
-			if (ex.InnerException is CveSecurityException)
-			{
-				throw ex.InnerException;
-			}
-
-			Logger.LogError(ex, "Error when calling method subscription with hash {Hash}", hash);
-		}
-	}
-
-	private bool ValidateParameterTypes(EntityMethodDefinition methodDefinition, MethodBase methodInfo,
-		MethodSubscriptionAttribute attribute)
-	{
-		Type[] actualParameterTypes = methodInfo.GetParameters().Select(p => p.ParameterType).ToArray();
-		var expectedParameterTypes = new[]
-		{
-			attribute.IncludeEntity ? new { Type = typeof(Entity), Name = "entity" } : null,
-			attribute.IncludePacketTime ? new { Type = typeof(float), Name = "packetTime" } : null
-		};
-
-		if (attribute.ParamsAsDictionary)
-		{
-			expectedParameterTypes = expectedParameterTypes
-				.Append(new { Type = typeof(Dictionary<string, object?>), Name = "arguments" })
-				.Where(t => t is not null)
+			var expectedParameters = methodDefinition.Arguments.Select(a => new { Type = a.DataType.ClrType, a.Name })
 				.ToArray();
+			
+			Logger.LogError(exception, """
+			                           Arguments of method definition and method subscription do not match
+			                           Entity Name: {entityName}
+			                           Method Name: {methodName}
+			                           Expected Parameters: {expectedParameters}
+			                           """,
+				Name,
+				methodDefinition.Name,
+				string.Join(", ", expectedParameters.Select(t => $"{t.Type.Name} {t.Name}")));
 		}
-		else
-		{
-			expectedParameterTypes = expectedParameterTypes
-				.Concat(methodDefinition.Arguments.Select(a => new { Type = a.DataType.ClrType, a.Name }))
-				.Where(t => t is not null)
-				.ToArray();
-		}
-
-		if (actualParameterTypes.SequenceEqual(expectedParameterTypes.Select(t => t!.Type)))
-		{
-			return true;
-		}
-
-		Logger.LogError(@"Arguments of method definition and method subscription do not match
-Method Name: {methodName}
-Subscription Name: {subscriptionName}
-Expected Arguments: {expectedArguments}
-Actual Parameters: {actualParameters}",
-			methodDefinition.Name, methodInfo.Name,
-			string.Join(", ", expectedParameterTypes.Select(t => $"{t!.Type.Name} {t.Name}")),
-			string.Join(", ", methodInfo.GetParameters().Select(a => $"{a.ParameterType.Name} {a.Name}")));
-
-		return false;
 	}
 
 	/// <summary>
@@ -367,46 +242,46 @@ Actual Parameters: {actualParameters}",
 
 		string hash = $"{Name}_{propertyDefinition.Name}";
 
-		if (PropertyChangedSubscriptions.TryGetValue(hash, out MethodInfo[]? methodInfos))
-		{
-			foreach (MethodInfo methodInfo in methodInfos)
-			{
-				ParameterInfo[] methodParameters = methodInfo.GetParameters();
-
-				if (methodParameters.Length is not 2
-				    || methodParameters[0].ParameterType != typeof(Entity)
-				    || methodParameters[1].ParameterType != propertyDefinition.DataType.ClrType
-				   )
-				{
-					StringBuilder sb =
-						new StringBuilder(
-								"Arguments of property definition and property changed subscription does not match")
-							.AppendLine()
-							.Append("Property Name: ")
-							.AppendLine(propertyDefinition.Name)
-							.Append("Subscription Name: ")
-							.AppendLine(methodInfo.Name)
-							.Append("Expected Arguments: ")
-							.AppendLine($"Entity entity, {propertyDefinition.DataType.ClrType.Name} value")
-							.Append("Actual Parameters: ")
-							.AppendLine(string.Join(", ",
-								methodParameters.Select(a => $"{a.ParameterType.Name} {a.Name}")));
-					Logger.LogError(sb.ToString());
-
-					return;
-				}
-
-				try
-				{
-					Logger.LogDebug("Calling property changed subscription with hash {Hash}", hash);
-					methodInfo.Invoke(subscriptionTarget, new[] { this, propertyValue });
-				}
-				catch (Exception ex)
-				{
-					Logger.LogError(ex, "Error when calling property changed subscription with hash {Hash}", hash);
-				}
-			}
-		}
+		// if (PropertyChangedSubscriptions.TryGetValue(hash, out MethodInfo[]? methodInfos))
+		// {
+		// 	foreach (MethodInfo methodInfo in methodInfos)
+		// 	{
+		// 		ParameterInfo[] methodParameters = methodInfo.GetParameters();
+		//
+		// 		if (methodParameters.Length is not 2
+		// 		    || methodParameters[0].ParameterType != typeof(Entity)
+		// 		    || methodParameters[1].ParameterType != propertyDefinition.DataType.ClrType
+		// 		   )
+		// 		{
+		// 			StringBuilder sb =
+		// 				new StringBuilder(
+		// 						"Arguments of property definition and property changed subscription does not match")
+		// 					.AppendLine()
+		// 					.Append("Property Name: ")
+		// 					.AppendLine(propertyDefinition.Name)
+		// 					.Append("Subscription Name: ")
+		// 					.AppendLine(methodInfo.Name)
+		// 					.Append("Expected Arguments: ")
+		// 					.AppendLine($"Entity entity, {propertyDefinition.DataType.ClrType.Name} value")
+		// 					.Append("Actual Parameters: ")
+		// 					.AppendLine(string.Join(", ",
+		// 						methodParameters.Select(a => $"{a.ParameterType.Name} {a.Name}")));
+		// 			Logger.LogError(sb.ToString());
+		//
+		// 			return;
+		// 		}
+		//
+		// 		try
+		// 		{
+		// 			Logger.LogDebug("Calling property changed subscription with hash {Hash}", hash);
+		// 			methodInfo.Invoke(subscriptionTarget, new[] { this, propertyValue });
+		// 		}
+		// 		catch (Exception ex)
+		// 		{
+		// 			Logger.LogError(ex, "Error when calling property changed subscription with hash {Hash}", hash);
+		// 		}
+		// 	}
+		// }
 	}
 
 	/// <summary>

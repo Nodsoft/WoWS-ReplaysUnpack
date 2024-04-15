@@ -59,7 +59,7 @@ namespace Nodsoft.WowsReplaysUnpack.ExtendedData
 		/// <param name="messageGroup">The message group of the message (All/).</param>
 		/// <param name="messageContent">The content of the message.</param>
 		/// <param name="reserved1">Parameter unused</param>
-		[MethodSubscription("Avatar", "onChatMessage", IncludePacketTime = true)]
+		//[MethodSubscription("Avatar", "onChatMessage", IncludePacketTime = true)]
 		private partial void AvatarOnChatMessage(float packetTime, int entityId, string messageGroup, string messageContent,
 			string reserved1)
 		{
@@ -70,7 +70,7 @@ namespace Nodsoft.WowsReplaysUnpack.ExtendedData
 		/// Triggered when arena data is parsed from the replay.
 		/// </summary>
 		/// <param name="arguments">The arguments of the event.</param>
-		[MethodSubscription("Avatar", "onArenaStateReceived", ParamsAsDictionary = true)]
+		//[MethodSubscription("Avatar", "onArenaStateReceived", ParamsAsDictionary = true)]
 		public void OnArenaStateReceived(Dictionary<string, object?> arguments)
 		{
 			byte[]? playerStatesData = (byte[]?)arguments["playersStates"];

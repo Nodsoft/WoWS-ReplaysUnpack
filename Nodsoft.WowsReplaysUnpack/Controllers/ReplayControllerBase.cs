@@ -1,11 +1,13 @@
 ﻿using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
+using Nodsoft.WowsReplaysUnpack.Core.Abstractions;
 using Nodsoft.WowsReplaysUnpack.Core.Definitions;
 using Nodsoft.WowsReplaysUnpack.Core.Entities;
 using Nodsoft.WowsReplaysUnpack.Core.Extensions;
 using Nodsoft.WowsReplaysUnpack.Core.Models;
 using Nodsoft.WowsReplaysUnpack.Core.Network.Packets;
 using Nodsoft.WowsReplaysUnpack.Core.Security;
+using Nodsoft.WowsReplaysUnpack.Generators;
 
 namespace Nodsoft.WowsReplaysUnpack.Controllers;
 
@@ -15,11 +17,10 @@ namespace Nodsoft.WowsReplaysUnpack.Controllers;
 /// </summary>
 /// <typeparam name="T"></typeparam>
 [PublicAPI]
-public abstract class ReplayControllerBase<T> : IReplayController<T> where T: UnpackedReplay, new()
+[ReplayController]
+public abstract partial class ReplayControllerBase<T> : IReplayController<T> where T: UnpackedReplay, new()
 {
-	// private static readonly Dictionary<string, MethodInfo[]> _methodSubscriptions;
-	// private static readonly Dictionary<string, MethodInfo[]> _propertyChangedSubscriptions;
-
+	
 	/// <summary>
 	/// Definition store used by the controller.
 	/// </summary>
@@ -33,40 +34,12 @@ public abstract class ReplayControllerBase<T> : IReplayController<T> where T: Un
 	/// <summary>
 	/// Unpacked replay being processed.
 	/// </summary>
-	public T Replay { get; protected set; }
-
-	//static ReplayControllerBase()
-	//{
-	// _methodSubscriptions = typeof(TController).GetMethods()
-	// 	.Select(m => new { Attribute = m.GetCustomAttribute<MethodSubscriptionAttribute>(), MethodInfo = m })
-	// 	.Where(m => m.Attribute is not null)
-	// 	.GroupBy(m => $"{m.Attribute!.EntityName}_{m.Attribute.MethodName}")
-	// 	.ToDictionary(
-	// 		m => m.Key, 
-	// 		m => m.OrderBy(m => m.Attribute?.Priority).Select(m => m.MethodInfo).ToArray());
-	//
-	// _propertyChangedSubscriptions = typeof(TController).GetMethods()
-	// 	.Select(m => new { Attribute = m.GetCustomAttribute<PropertyChangedSubscriptionAttribute>(), MethodInfo = m })
-	// 	.Where(m => m.Attribute is not null)
-	// 	.GroupBy(m => $"{m.Attribute!.EntityName}_{m.Attribute.PropertyName}")
-	// 	.ToDictionary(
-	// 		m => m.Key, 
-	// 		m => m.Select(m => m.MethodInfo).ToArray());
-	//}
-
-#pragma warning disable CS8618 // Replay Property is never null because after creating the controller, CreateUnpackedReplay is called
-
-	// ReSharper disable once ContextualLoggerProblem
+	public T Replay { get; protected set; } = null!;
+	
 	protected ReplayControllerBase(IDefinitionStore definitionStore, ILogger<Entity> entityLogger)
 		=> (DefinitionStore, EntityLogger) = (definitionStore, entityLogger);
 
-#pragma warning restore CS8618
-
-	/// <summary>
-	/// Creates an <inheritdoc cref="UnpackedReplay" /> out of an existing <see cref="ArenaInfo" />.
-	/// </summary>
-	/// <param name="arenaInfo">The arena info.</param>
-	/// <returns>The unpacked replay.</returns>
+	/// <inheritdoc />
 	public T CreateUnpackedReplay(ArenaInfo arenaInfo)
 	{
 		Replay = new()
@@ -285,21 +258,35 @@ public abstract class ReplayControllerBase<T> : IReplayController<T> where T: Un
 
 	#region Subscriptions
 
-	/// <summary>
-	/// Triggered when a CVE is handled by <see cref="HandleNetworkPacket"/>.
-	/// </summary>
-	/// <param name="arguments">The arguments.</param>
-	[MethodSubscription("Avatar", "onArenaStateReceived", ParamsAsDictionary = true, Priority = -1)]
-	public void OnArenaStateReceivedCVECheck(Dictionary<string, object?> arguments)
+	// /// <summary>
+	// /// Triggered when a CVE is handled by <see cref="HandleNetworkPacket"/>.
+	// /// </summary>
+	// /// <param name="arguments">The arguments.</param>
+	// [MethodSubscription("Avatar", "onArenaStateReceived", ParamsAsDictionary = true)]
+	// public void OnArenaStateReceivedCVECheck(Dictionary<string, object?> arguments)
+	// {
+	// 	var x = arguments.Values.ElementAt(0);
+	// 	CveChecks.ScanForCVE_2022_31265((byte[])arguments["preBattlesInfo"]!,
+	// 		"Avatar_onArenaStateReceived_preBattlesInfo");
+	// 	CveChecks.ScanForCVE_2022_31265((byte[])arguments["playersStates"]!,
+	// 		"Avatar_onArenaStateReceived_playersStates");
+	// 	CveChecks.ScanForCVE_2022_31265((byte[])arguments["observersState"]!,
+	// 		"Avatar_onArenaStateReceived_observersState");
+	// 	CveChecks.ScanForCVE_2022_31265((byte[])arguments["buildingsInfo"]!,
+	// 		"Avatar_onArenaStateReceived_buildingsInfo");
+	// }
+	
+	[MethodSubscription("Avatar", "onArenaStateReceived", IncludeEntity = true, IncludePacketTime = true)]
+	public void OnArenaStateReceivedCVECheck2(Entity entity, float packetTime, byte[]? preBattlesInfo, byte[]? playersStates)
 	{
-		CveChecks.ScanForCVE_2022_31265((byte[])arguments["preBattlesInfo"]!,
-			"Avatar_onArenaStateReceived_preBattlesInfo");
-		CveChecks.ScanForCVE_2022_31265((byte[])arguments["playersStates"]!,
-			"Avatar_onArenaStateReceived_playersStates");
-		CveChecks.ScanForCVE_2022_31265((byte[])arguments["observersState"]!,
-			"Avatar_onArenaStateReceived_observersState");
-		CveChecks.ScanForCVE_2022_31265((byte[])arguments["buildingsInfo"]!,
-			"Avatar_onArenaStateReceived_buildingsInfo");
+		// CveChecks.ScanForCVE_2022_31265((byte[])arguments["preBattlesInfo"]!,
+		// 	"Avatar_onArenaStateReceived_preBattlesInfo");
+		// CveChecks.ScanForCVE_2022_31265((byte[])arguments["playersStates"]!,
+		// 	"Avatar_onArenaStateReceived_playersStates");
+		// CveChecks.ScanForCVE_2022_31265((byte[])arguments["observersState"]!,
+		// 	"Avatar_onArenaStateReceived_observersState");
+		// CveChecks.ScanForCVE_2022_31265((byte[])arguments["buildingsInfo"]!,
+		// 	"Avatar_onArenaStateReceived_buildingsInfo");
 	}
 
 	#endregion
