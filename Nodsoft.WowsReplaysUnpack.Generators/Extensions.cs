@@ -24,6 +24,16 @@ public static class Extensions
 
 		return null;
 	}
+	
+	public static string? GetStringValue(this ImmutableDictionary<string, TypedConstant> dictionary, string name)
+	{
+		if (dictionary.TryGetValue(name, out TypedConstant constant) && constant.Value is string value)
+		{
+			return value;
+		}
+
+		return null;
+	}
 
 	public static string GetTypeName(this IParameterSymbol parameterSymbol) => parameterSymbol.Type.GetTypeName();
 

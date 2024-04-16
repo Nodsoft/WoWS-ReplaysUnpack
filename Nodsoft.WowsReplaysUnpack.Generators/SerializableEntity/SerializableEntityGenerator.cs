@@ -2,6 +2,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -14,6 +15,7 @@ public class SerializableEntityGenerator : IIncrementalGenerator
 	private const string SerializableEntityAttribute =
 		"Nodsoft.WowsReplaysUnpack.Generators.SerializableEntityAttribute";
 
+	private const string DataMemberAttribute = "System.Runtime.Serialization.DataMemberAttribute";
 	public void Initialize(IncrementalGeneratorInitializationContext context)
 	{
 		context.RegisterPostInitializationOutput(ctx => ctx.AddSource(
@@ -52,7 +54,7 @@ public class SerializableEntityGenerator : IIncrementalGenerator
 		}
 
 		PropertyData[] properties = GetPropertiesRecursive(symbol, 0).ToArray();
-		return new EntityToGenerate(symbol.Name, symbol.ContainingNamespace.Name, properties);
+		return new EntityToGenerate(symbol.Name, symbol.ContainingNamespace.ToString(), properties);
 	}
 
 	private static IEnumerable<PropertyData> GetPropertiesRecursive(INamedTypeSymbol symbol,
@@ -83,13 +85,13 @@ public class SerializableEntityGenerator : IIncrementalGenerator
 				if (propertyTypeSymbol is { IsGenericType: true, Name: "List" })
 				{
 					yield return new PropertyData(propertySymbol.Name, propertyPath, mappedPropertyPath, true,
-						propertyTypeSymbol.Name, listLevel);
+						propertyTypeSymbol.Name, string.Empty, listLevel);
 
 					if (propertyTypeSymbol.TypeArguments[0] is INamedTypeSymbol { IsReferenceType: true } itemSymbol)
 					{
 						yield return new PropertyData(propertySymbol.Name, propertyPath + ".#Add", mappedPropertyPath,
 							true,
-							itemSymbol.Name, listLevel, true);
+							itemSymbol.Name, itemSymbol.ContainingNamespace.ToString(), listLevel, true);
 
 						foreach (PropertyData child in GetPropertiesRecursive(itemSymbol, depth++, propertyPath,
 							         mappedPropertyPath,
@@ -102,13 +104,14 @@ public class SerializableEntityGenerator : IIncrementalGenerator
 					{
 						yield return new PropertyData(propertySymbol.Name, propertyPath + ".#Add", mappedPropertyPath,
 							false,
-							propertyTypeSymbol.TypeArguments[0].GetTypeName(), listLevel, true);
+							propertyTypeSymbol.TypeArguments[0].GetTypeName(),
+							propertyTypeSymbol.TypeArguments[0].ContainingNamespace.ToString(), listLevel, true);
 					}
 				}
 				else
 				{
 					yield return new PropertyData(propertySymbol.Name, propertyPath, mappedPropertyPath, true,
-						propertyTypeSymbol.Name, listLevel);
+						propertyTypeSymbol.Name, propertyTypeSymbol.ContainingNamespace.ToString(), listLevel);
 
 					foreach (PropertyData child in GetPropertiesRecursive(propertyTypeSymbol, depth++, propertyPath,
 						         mappedPropertyPath))
@@ -120,16 +123,24 @@ public class SerializableEntityGenerator : IIncrementalGenerator
 			else
 			{
 				yield return new PropertyData(propertySymbol.Name, propertyPath, mappedPropertyPath, false,
-					propertySymbol.Type.GetTypeName(), listLevel);
+					propertySymbol.Type.GetTypeName(), propertySymbol.Type.ContainingNamespace.ToString(), listLevel);
 			}
 		}
 	}
 
 	private static string GetPropertyPath(string? parentPath, ISymbol propertySymbol)
 	{
+		string mappedName = propertySymbol.Name;
+		if (propertySymbol.GetAttributes() is { Length: > 0 } attributes &&
+		    attributes.FirstOrDefault(a => a.AttributeClass?.ToString() is DataMemberAttribute) is { } attribute &&
+		    attribute.NamedArguments.ToImmutableDictionary().GetStringValue("Name") is { } value)
+		{
+			mappedName = value;
+		}
+		
 		string propertyPath = string.IsNullOrEmpty(parentPath)
-			? propertySymbol.Name
-			: parentPath + "." + propertySymbol.Name;
+			? mappedName
+			: parentPath + "." + mappedName;
 		return propertyPath;
 	}
 

@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Linq;
+using System.Text;
 
 namespace Nodsoft.WowsReplaysUnpack.Generators.SerializableEntity;
 
@@ -7,10 +8,25 @@ internal static class SerializableEntitySourceWriter
 	public static string Generate(EntityToGenerate entity)
 	{
 		StringBuilder sb = new StringBuilder(SourceGenerationHelper.Header).AppendLine();
-		sb.AppendLine("using System;");
-		sb.AppendLine("using Nodsoft.WowsReplaysUnpack.Core.Entities;");
-		sb.Append("namespace ").Append(entity.Namespace).AppendLine(";").AppendLine();
 
+		string[] namespaces = entity.Properties.Select(p => p.TypeNamespace)
+			.Where(ns => !string.IsNullOrEmpty(ns) && !ns.Equals(entity.Namespace))
+			.Distinct()
+			.ToArray();
+
+		foreach (string ns in namespaces)
+		{
+			sb.Append("using ").Append(ns).AppendLine(";");
+		}
+
+		sb.AppendLine("using Nodsoft.WowsReplaysUnpack.Core.Entities;");
+		sb.AppendLine();
+		
+		if (!string.IsNullOrEmpty(entity.Namespace))
+		{
+			sb.Append("namespace ").Append(entity.Namespace).AppendLine(";").AppendLine();
+		}
+		
 		sb.Append("public partial class ").Append(entity.ClassName).Append(": ISerializableEntity").AppendLine();
 		sb.AppendLine("{").AppendLine();
 

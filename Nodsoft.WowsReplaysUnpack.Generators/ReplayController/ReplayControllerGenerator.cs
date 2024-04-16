@@ -15,6 +15,8 @@ public class ReplayControllerGenerator : IIncrementalGenerator
 	private const string ReplayControllerAttribute =
 		"Nodsoft.WowsReplaysUnpack.Generators.ReplayControllerAttribute";
 
+	private const string MethodSubscriptionAttribute =
+		"Nodsoft.WowsReplaysUnpack.Core.Entities.MethodSubscriptionAttribute";
 	public void Initialize(IncrementalGeneratorInitializationContext context)
 	{
 		context.RegisterPostInitializationOutput(ctx => ctx.AddSource(
@@ -78,8 +80,7 @@ public class ReplayControllerGenerator : IIncrementalGenerator
 			ImmutableArray<AttributeData> attributes = method.GetAttributes();
 			foreach (AttributeData? attribute in attributes)
 			{
-				string fullName = attribute.AttributeClass!.ContainingNamespace + "." + attribute.AttributeClass.Name;
-				if (fullName is not "Nodsoft.WowsReplaysUnpack.Core.Entities.MethodSubscriptionAttribute")
+				if (attribute.AttributeClass?.ToString() is not MethodSubscriptionAttribute)
 				{
 					continue;
 				}

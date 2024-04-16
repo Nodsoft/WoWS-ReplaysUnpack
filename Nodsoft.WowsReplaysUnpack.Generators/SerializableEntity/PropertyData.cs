@@ -8,9 +8,10 @@ public record struct PropertyData
 	public readonly bool IsClass;
 	public readonly bool IsAdd;
 	public readonly string Type;
+	public readonly string TypeNamespace;
 	public readonly int? ListLevel;
 
-	public PropertyData(string name, string path, string mappedPath, bool isClass, string type, int? listLevel, bool isAdd = false)
+	public PropertyData(string name, string path, string mappedPath, bool isClass, string type, string typeNamespace, int? listLevel, bool isAdd = false)
 	{
 		Name = name;
 		Path = path;
@@ -20,5 +21,6 @@ public record struct PropertyData
 		Type = type;
 		ListLevel = listLevel;
 		IsAdd = isAdd;
+		TypeNamespace = typeNamespace;
 	}
 }
