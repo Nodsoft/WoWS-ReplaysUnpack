@@ -7,6 +7,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
     </PropertyGroup>
 
     <ItemGroup>
@@ -21,7 +22,7 @@
 
     <ItemGroup>
         <ProjectReference Include="../Nodsoft.WowsReplaysUnpack.Core/Nodsoft.WowsReplaysUnpack.Core.csproj"/>
-        <ProjectReference Include="..\Nodsoft.WowsReplaysUnpack.Generators\Nodsoft.WowsReplaysUnpack.Generators.csproj" 
+        <ProjectReference Include="..\Nodsoft.WowsReplaysUnpack.Generators\Nodsoft.WowsReplaysUnpack.Generators.csproj"
                           OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="All"/>
     </ItemGroup>
 
