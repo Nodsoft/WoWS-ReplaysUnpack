@@ -25,8 +25,8 @@ public class EntitySerializerSample : TaskBase
 		using IReplayUnpackerService<ExtendedDataReplay> unpacker =
 			services.GetRequiredService<IReplayUnpackerFactory>().GetExtendedDataUnpacker();
 
-		UnpackedReplay alphaReplay = unpacker.Unpack(GetReplayFile("press_account_alpha.wowsreplay"));
-		UnpackedReplay bravoReplay = unpacker.Unpack(GetReplayFile("press_account_bravo.wowsreplay"));
+		ExtendedDataReplay alphaReplay = unpacker.Unpack(GetReplayFile("press_account_alpha.wowsreplay"));
+		ExtendedDataReplay bravoReplay = unpacker.Unpack(GetReplayFile("press_account_bravo.wowsreplay"));
 
 		ManualExtensions(alphaReplay, bravoReplay);
 		Serializer(alphaReplay, bravoReplay);
