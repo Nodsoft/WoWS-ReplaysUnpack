@@ -53,6 +53,17 @@ public class ReplayUnpackerBuilder
 		where TController : class, IReplayController<TReplay>
 		where TReplay : UnpackedReplay, new()
 	{
+		ServiceDescriptor[] existingControllers = Services.Where(s =>
+				s.ServiceType.IsGenericType &&
+				s.ServiceType.GetGenericTypeDefinition() == typeof(IReplayController<>))
+			.ToArray();
+
+		foreach (ServiceDescriptor existingController in existingControllers)
+		{
+			if (existingController.ServiceType.GenericTypeArguments[0] == typeof(TReplay))
+				throw new Exception("There can only be one controller per replay type registered");
+		}
+		
 		Services.AddScoped<IReplayUnpackerService<TReplay>, ReplayUnpackerService<TReplay>>();
 		Services.AddScoped<IReplayController<TReplay>, TController>();
 		return this;

@@ -69,6 +69,8 @@ Responsible for handling parsed network packets and filling the UnpackedReplay w
 
 Your custom replay controller has to implement `IReplayController` but it is strongly suggested 
 to use `ReplayControllerBase<T>` where T is your custom replay class.
+Only one controller can be registered for any replay type.
+~~~~
 An example of this is the [ExtendedDataController](Nodsoft.WowsReplaysUnpack.ExtendedData/ExtendedDataController.cs).
 
 To use your custom controller add the replay type to the `GetUnpacker()` method.
