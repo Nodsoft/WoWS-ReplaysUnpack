@@ -44,7 +44,7 @@ public class DefaultReplayDataParser : IReplayDataParser
 			_packetBuffer.Seek(0, SeekOrigin.Begin);
 
 			yield return PacketTypeMap.TryGetValue(NetworkPacketTypes.GetTypeName(packetType, gameVersion),
-				out var packetTypeFunc)
+				out Func<int, float, BinaryReader, NetworkPacketBase>? packetTypeFunc)
 				? packetTypeFunc(packetIndex, packetTime, _packetBufferReader)
 				: new UnknownPacket(packetIndex, _packetBufferReader);
 

@@ -17,6 +17,8 @@
     <ProjectReference Include="../Nodsoft.WowsReplaysUnpack.ExtendedData/Nodsoft.WowsReplaysUnpack.ExtendedData.csproj" />
     <ProjectReference Include="../Nodsoft.WowsReplaysUnpack/Nodsoft.WowsReplaysUnpack.csproj" />
     <ProjectReference Include="..\Nodsoft.WowsReplaysUnpack.FileStore\Nodsoft.WowsReplaysUnpack.FileStore.csproj" />
+    <ProjectReference Include="..\Nodsoft.WowsReplaysUnpack.Generators\Nodsoft.WowsReplaysUnpack.Generators.csproj"
+                      OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="All"/>
   </ItemGroup>
 
   <ItemGroup>

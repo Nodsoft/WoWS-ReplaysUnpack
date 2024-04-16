@@ -19,4 +19,11 @@ namespace Nodsoft.WowsReplaysUnpack.Generators;
 
 [global::System.AttributeUsage(global::System.AttributeTargets.Class)]
 internal class ReplayControllerAttribute : global::System.Attribute;";
+	
+	public const string SerializableEntityAttribute = Header + @"
+namespace Nodsoft.WowsReplaysUnpack.Generators;
+
+[global::System.AttributeUsage(global::System.AttributeTargets.Class)]
+internal class SerializableEntityAttribute : global::System.Attribute;";
+	
 }

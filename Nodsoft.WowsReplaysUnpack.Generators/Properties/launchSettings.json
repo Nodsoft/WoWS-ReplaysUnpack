@@ -3,7 +3,7 @@
   "profiles": {
     "DebugRoslynSourceGenerator": {
       "commandName": "DebugRoslynComponent",
-      "targetProject": "../Nodsoft.WowsReplaysUnpack/Nodsoft.WowsReplaysUnpack.csproj"
+      "targetProject": "../Nodsoft.WowsReplaysUnpack.Console/Nodsoft.WowsReplaysUnpack.Console.csproj"
     }
   }
 }

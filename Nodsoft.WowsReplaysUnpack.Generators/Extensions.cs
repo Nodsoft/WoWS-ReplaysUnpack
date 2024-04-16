@@ -7,27 +7,33 @@ public static class Extensions
 {
 	public static bool GetBoolValue(this ImmutableDictionary<string, TypedConstant> dictionary, string name)
 	{
-		if (dictionary.TryGetValue(name, out var constant) && constant.Value is bool value)
+		if (dictionary.TryGetValue(name, out TypedConstant constant) && constant.Value is bool value)
+		{
 			return value;
+		}
 
 		return false;
 	}
 	
 	public static int? GetIntValue(this ImmutableDictionary<string, TypedConstant> dictionary, string name)
 	{
-		if (dictionary.TryGetValue(name, out var constant) && constant.Value is int value)
+		if (dictionary.TryGetValue(name, out TypedConstant constant) && constant.Value is int value)
+		{
 			return value;
+		}
 
 		return null;
 	}
 
-	public static string GetTypeName(this IParameterSymbol parameterSymbol)
+	public static string GetTypeName(this IParameterSymbol parameterSymbol) => parameterSymbol.Type.GetTypeName();
+
+	public static string GetTypeName(this ITypeSymbol typeSymbol)
 	{
-		if (parameterSymbol.Type is INamedTypeSymbol { IsGenericType: true, Name: "Nullable" } namedTypeSymbol)
+		if (typeSymbol is INamedTypeSymbol { IsGenericType: true, Name: "Nullable" } namedTypeSymbol)
 		{
 			return namedTypeSymbol.TypeArguments[0].Name + "?";
 		}
 
-		return parameterSymbol.Type.Name;
+		return typeSymbol.Name;
 	}
 }

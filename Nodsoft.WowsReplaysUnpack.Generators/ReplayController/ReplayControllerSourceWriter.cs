@@ -6,7 +6,7 @@ namespace Nodsoft.WowsReplaysUnpack.Generators.ReplayController;
 
 internal static class ReplayControllerSourceWriter
 {
-	public static string NewMethod(ControllerToGenerate controller)
+	public static string Generate(ControllerToGenerate controller)
 	{
 		IEnumerable<IGrouping<string, MethodSubscriptionData>> methods =
 			controller.Methods.GroupBy(m => $"{m.EntityName}_{m.MethodName}");
@@ -59,10 +59,14 @@ internal static class ReplayControllerSourceWriter
 				sb.Append("        ").Append(sub.CallName).Append('(');
 
 				if (sub.IncludeEntity)
+				{
 					sb.Append("entity, ");
+				}
 
 				if (sub.IncludePacketTime)
+				{
 					sb.Append("packetTime, ");
+				}
 
 				if (sub.ParamsAsDictionary)
 				{
@@ -76,7 +80,9 @@ internal static class ReplayControllerSourceWriter
 						string postFix = type.EndsWith("?") ? string.Empty : "!";
 						sb.Append($"({sub.ParameterTypes.ElementAt(i)})arguments.Values.ElementAt({i}){postFix}");
 						if (i < sub.ParameterTypes.Count - 1)
+						{
 							sb.Append(", ");
+						}
 					}
 
 					sb.AppendLine(");");

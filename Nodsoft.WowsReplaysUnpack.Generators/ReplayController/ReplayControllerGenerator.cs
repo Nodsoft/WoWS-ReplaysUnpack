@@ -38,7 +38,7 @@ public class ReplayControllerGenerator : IIncrementalGenerator
 			}
 
 			ctx.AddSource(controllerInput.Value.Name + ".g.cs",
-				ReplayControllerSourceWriter.NewMethod(controllerInput.Value));
+				ReplayControllerSourceWriter.Generate(controllerInput.Value));
 		});
 	}
 
