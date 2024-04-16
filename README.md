@@ -28,7 +28,7 @@ services.AddWowsReplayUnpacker();
 ```
 Get the factory with DI, get the `IReplayUnpackerService` from the factory and call the `Unpack` method with either a `Stream` or `byte[]`
 ```csharp
-ReplayUnpackerFactory replayUnpackerFactory = serviceProvider.GetService<ReplayUnpackerFactory>();
+ReplayUnpackerFactory replayUnpackerFactory = serviceProvider.GetService<IReplayUnpackerService>();
 UnpackedReplay unpackedReplay = replayUnpackerFactory
 	.GetUnpacker()
 	.Unpack(File.OpenRead("my-replay.wowsreplay"));
@@ -38,16 +38,26 @@ You can provide custom implementations of certain services.
 ```csharp
 services.Snippet.AddWowsReplayUnpacker(builder =>
 {
-	builder.AddReplayController<MyCustomReplayController>();
+	builder.AddReplayController<MyCustomReplayController, MyCustomReplay>();
 	builder.WithReplayDataParser<MyCustomReplayDataParser>();
+	builder.WithDefinitionLoader<MyCustomDefinitionLoader>();
 	builder.WithDefinitionStore<MyCustomDefinitionStore>();
 })
 ```
 ### DefinitionStore
-Responsible for managing, accessing and caching the `.def` files (used for type and property mapping).
+Responsible for managing, giving access and caching the `.def` files (used for type and property mapping).
+Uses the `IDefinitionLoader` for resolving non-cached files once.
 
 Your custom definition store has to implement `IDefinitionStore` or extend `DefaultDefinitionStore`
 
+### DefinitionLoader
+Responsible for loading the actual definition files.
+
+Your custom definition store has to implement `IDefinitionLoader`.
+The default loader is the [AssemblyDefinitionLoader](Nodsoft.WowsReplaysUnpack.Core/Definitions/AssemblyDefinitionLoader.cs).
+
+You can optionally use the [FileSystemDefinitionLoader](Nodsoft.WowsReplaysUnpack.FileStore/Definitions/FileSystemDefinitionLoader.cs) 
+by installing the `Nodsoft.WowsReplaysUnpack.FileStore` nuget package.
 
 ### ReplayDataParser
 Responsible for parsing the binary packets to the specific [network packets](Nodsoft.WowsReplaysUnpack.Core/Network/Packets).
@@ -57,12 +67,14 @@ Your custom replay data parser has to implement `IReplayDataParser` or extend `D
 ### ReplayController
 Responsible for handling parsed network packets and filling the UnpackedReplay with information.
 
-Your custom replay controller has to implement `IReplayController` but it is strongly suggested to use `ReplayControllerBase<T>` where T is your custom controller class.
+Your custom replay controller has to implement `IReplayController` but it is strongly suggested 
+to use `ReplayControllerBase<T>` where T is your custom replay class.
+An example of this is the [ExtendedDataController](Nodsoft.WowsReplaysUnpack.ExtendedData/ExtendedDataController.cs).
 
-To use your custom controller add the type to the `GetUnpacker()` method.
+To use your custom controller add the replay type to the `GetUnpacker()` method.
 ```csharp
 UnpackedReplay unpackedReplay = replayUnpackerFactory
-	.GetUnpacker<MyCustomReplayController>()
+	.GetUnpacker<MyCustomReplay>()
 	.Unpack(File.OpenRead("my-replay.wowsreplay"));
 ```
 **CVE Check Only Implementation**
@@ -72,29 +84,24 @@ In the library you get a custom implementation ready to use for when you only wa
 
 It skips all network packets except the affected ones.
 
-You have to add it with the `AddReplayController<CveCheckOnlyController>()` method and get the unpacker with `GetUnpacker<CveCheckOnlyController>()`
+You can add it with the `AddCveCheckController()` method and get the unpacker with `GetCveCheckUnpacker()`
 
 **Extend the replay data**
 
-When implementing your own controller and extending `ReplayControllerBase<T>` you can overwrite the `CreateUnpackedReplay` method to create an instance of your own replay class.
+When implementing your own controller and extending `ReplayControllerBase<T>`;
 The replay class has to extend `UnpackedReplay`. 
 That way you can add extra properties.
-It is important that you set the `Replay` property so the ReplayControllerBase can work with it.
 
-Example:
-```csharp
-public override UnpackedReplay CreateUnpackedReplay(ArenaInfo arenaInfo)
-{
-	Replay = new MyCustomUnpackedReplay(arenaInfo);
-	return Replay;
-}
-```
 You can see this in action [here](Nodsoft.WowsReplaysUnpack.ExtendedData/ExtendedDataController.cs)
 
-**Method/Property Subscriptions**
+### Method/Property Subscriptions
 
 When implementing your own controller and extending `ReplayControllerBase<T>` you can subscribe to `EntityMethods` and `EntityProperty` calls by adding a method with an attribute.
 
+You will have to install the `Nodsoft.WowsReplaysUnpack.Generators` nuget package and add the `[ReplayController]` attribute to your controller class.
+This will generate the required logic to make the dynamic subscriptions work.
+
+#### Methods
 `MethodSubscription("EntityName", "MethodName")`
 
 You have a few extra properties on the attribute to configure how the method will be called:
@@ -114,6 +121,7 @@ public void OnArenaStateReceived(Entity entity, float packetTime, ...)
 }
 ```
 
+#### Properties
 `PropertySubscription("EntityName", "PropertyName")`
 
 There are no extra properties available and the `Entity entity` parameter is always there.
@@ -142,7 +150,7 @@ services.AddWowsReplayUnpacker(builder =>
 	builder.AddExtendedData();
 });
 
-ExtendedDataReplay unpackedReplay = (ExtendedDataReplay)replayUnpackerFactory
+ExtendedDataReplay unpackedReplay = replayUnpackerFactory
 	.GetExtendedDataUnpacker()
 	.Unpack(File.OpenRead("my-replay.wowsreplay"));
 ```

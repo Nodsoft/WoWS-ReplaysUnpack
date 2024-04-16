@@ -3,7 +3,7 @@ using Nodsoft.WowsReplaysUnpack.Services;
 
 namespace Nodsoft.WowsReplaysUnpack.ExtendedData;
 
-public static class Extensions
+public static class ReplayUnpackerFactoryExtensions
 {
 	/// <summary>
 	/// Gets the extended data unpacker service from a <see cref="IReplayUnpackerFactory"/>.

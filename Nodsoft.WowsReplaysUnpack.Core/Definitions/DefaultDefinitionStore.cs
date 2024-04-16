@@ -8,7 +8,7 @@ using System.Xml;
 namespace Nodsoft.WowsReplaysUnpack.Core.Definitions;
 
 /// <summary>
-/// Default implementation of a Definition store, which is used to load definitions from XML files.
+/// Default implementation of a Definition store, which is used to provide the definitions from cache when already loaded
 /// </summary>
 [PublicAPI]
 public class DefaultDefinitionStore : IDefinitionStore

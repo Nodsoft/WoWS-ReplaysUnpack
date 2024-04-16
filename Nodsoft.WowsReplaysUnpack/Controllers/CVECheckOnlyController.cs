@@ -13,8 +13,10 @@ namespace Nodsoft.WowsReplaysUnpack.Controllers;
 /// Currently scans for signs of <a href="https://www.cve.org/CVERecord?id=CVE-2022-31265">CVE-2022-31265</a>.
 /// </summary>
 [PublicAPI]
-public class CveCheckOnlyController : ReplayControllerBase<UnpackedReplay>
+public class CveCheckOnlyController : ReplayControllerBase<CveCheckOnlyController.CveCheckReplay>
 {
+	public class CveCheckReplay : UnpackedReplay;
+	
 	// ReSharper disable once ContextualLoggerProblem
 	public CveCheckOnlyController(IDefinitionStore definitionStore, ILogger<Entity> entityLogger) : base(definitionStore, entityLogger) { }
 
