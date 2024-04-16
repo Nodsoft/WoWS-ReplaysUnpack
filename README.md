@@ -154,3 +154,43 @@ ExtendedDataReplay unpackedReplay = replayUnpackerFactory
 	.GetExtendedDataUnpacker()
 	.Unpack(File.OpenRead("my-replay.wowsreplay"));
 ```
+
+## Additional Entities
+The replay contains a multitude of other entities. If you want to retreive those you have two convenient options we provide.
+
+### Option 1 - Extension Methods
+
+```csharp
+// Step 1 - Retreive the entity properties you're interested in
+var battleLogicProperties = replay.Entities.Single(e => e.Value.Name == "BattleLogic").Value.Properties;
+// Step 2 - Use extension methods to cast the properties to their actual type
+battleLogicProperties.GetAsDict("propertyName");
+battleLogicProperties.GetAsArr("propertyName");
+battleLogicProperties.GetAsValue<short>("propertyName");
+```
+
+An example of this can be seen [here](Nodsoft.WowsReplaysUnpack.Console/Samples/EntitySerializer/EntitySerializerSample.cs) in the `ManualExtensions` method.
+
+### Option 2 - Strong Type Serializing
+
+Requires the `Nodsoft.WowsReplaysUnpack.Generators` nuget package.
+
+```csharp
+// Step 1 - Create a class representing the entity annotated with the SerializableEntity attribute
+[SerializableEntity]
+public class BattleLogic {
+  [DataMember(Name = "state")]
+  public State State { get; set; } = null!;
+    
+    ...
+}
+
+// Step 2 - Use extension method on the replay to deserialize the entity
+var battleLogic = replay.DeserializeEntity<BattleLogic>("BattleLogic");
+```
+
+For collections only `List<T>` is currently supported. 
+
+The property mapping is case-sensitive. So you either have to name your properties exactly like they are in the entities properties dictionary or use the `DataMember` attribute.
+
+An example of this can be seen [here](Nodsoft.WowsReplaysUnpack.Console/Samples/EntitySerializer/EntitySerializerSample.cs) in the `Serializer` method.
