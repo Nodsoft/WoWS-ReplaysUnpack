@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Nodsoft.WowsReplaysUnpack;
 using Nodsoft.WowsReplaysUnpack.Core.Models;
+using Nodsoft.WowsReplaysUnpack.EntitySerializer;
 using Nodsoft.WowsReplaysUnpack.FileStore.Definitions;
 using Nodsoft.WowsReplaysUnpack.Generators;
 using Nodsoft.WowsReplaysUnpack.Services;
@@ -13,6 +14,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
+using Test;
 
 string samplePath = Path.Join(Directory.GetCurrentDirectory(), "../../../../Nodsoft.WowsReplaysUnpack.Tests",
 	"Replay-Samples");
@@ -50,124 +52,86 @@ ReplayUnpackerFactory? replayUnpacker = services.GetRequiredService<ReplayUnpack
 //	Console.WriteLine($"[{GetGroupString(msg)}] {msg.EntityId} : {msg.MessageContent}");
 //}
 
-const int CYCLE = 20;
-
-async Task<UnpackedReplay[]> syncTasks(bool sync)
-{
-	List<UnpackedReplay> unpackedReplays = new();
-	if (sync)
-	{
-		for (int i = 0; i < CYCLE; i++)
-		{
-			replayUnpacker.GetUnpacker().Unpack(_GetReplayFile("good.wowsreplay"));
-		}
-	}
-	else
-	{
-		Parallel.ForEach(Enumerable.Range(0, CYCLE), (i) =>
-		{
-			unpackedReplays.Add(replayUnpacker.GetUnpacker().Unpack(_GetReplayFile("good.wowsreplay")));
-		});
-	}
-
-	return unpackedReplays.ToArray();
-}
-
-DateTime start = DateTime.Now;
-await syncTasks(false);
-Console.WriteLine(DateTime.Now - start);
+// const int CYCLE = 20;
+//
+// async Task<UnpackedReplay[]> syncTasks(bool sync)
+// {
+// 	List<UnpackedReplay> unpackedReplays = new();
+// 	if (sync)
+// 	{
+// 		for (int i = 0; i < CYCLE; i++)
+// 		{
+// 			replayUnpacker.GetUnpacker().Unpack(_GetReplayFile("good.wowsreplay"));
+// 		}
+// 	}
+// 	else
+// 	{
+// 		Parallel.ForEach(Enumerable.Range(0, CYCLE), (i) =>
+// 		{
+// 			unpackedReplays.Add(replayUnpacker.GetUnpacker().Unpack(_GetReplayFile("good.wowsreplay")));
+// 		});
+// 	}
+//
+// 	return unpackedReplays.ToArray();
+// }
+//
+// DateTime start = DateTime.Now;
+// await syncTasks(false);
+// Console.WriteLine(DateTime.Now - start);
 
 UnpackedReplay goodReplay = replayUnpacker.GetUnpacker().Unpack(_GetReplayFile("good.wowsreplay"));
 UnpackedReplay alphaReplay = replayUnpacker.GetUnpacker().Unpack(_GetReplayFile("press_account_alpha.wowsreplay"));
 UnpackedReplay bravoReplay = replayUnpacker.GetUnpacker().Unpack(_GetReplayFile("unfinished_replay.wowsreplay"));
 
-// var alphaState = alphaReplay.Entities.Single(e => e.Value.Name == "BattleLogic").Value.ClientProperties
-// 	.GetAsDict("state")
-// 	.GetAsDict("missions")
-// 	.GetAsArr("teamsScore");
-//
-// var bravoState = bravoReplay.Entities.Single(e => e.Value.Name == "BattleLogic").Value.ClientProperties
-// 	.GetAsDict("state")
-// 	.GetAsDict("missions")
-// 	.GetAsArr("teamsScore");
-//
-// var scoreA = alphaState.GetAsDict(0).GetAsValue<ushort>("score");
-// var scoreB = alphaState.GetAsDict(1).GetAsValue<ushort>("score");
-//
-// var _scoreA = bravoState.GetAsDict(0).GetAsValue<ushort>("score");
-// var _scoreB = bravoState.GetAsDict(1).GetAsValue<ushort>("score");
+var alphaState = alphaReplay.Entities.Single(e => e.Value.Name == "BattleLogic").Value.ClientProperties
+	.GetAsDict("state")?
+	.GetAsDict("missions")?
+	.GetAsArr("teamsScore");
+
+var bravoState = bravoReplay.Entities.Single(e => e.Value.Name == "BattleLogic").Value.ClientProperties
+	.GetAsDict("state")?
+	.GetAsDict("missions")?
+	.GetAsArr("teamsScore");
+
+var scoreA = alphaState?.GetAsDict(0)?.GetAsValue<ushort>("score");
+var scoreB = alphaState?.GetAsDict(1)?.GetAsValue<ushort>("score");
+
+var _scoreA = bravoState?.GetAsDict(0)?.GetAsValue<ushort>("score");
+var _scoreB = bravoState?.GetAsDict(1)?.GetAsValue<ushort>("score");
 
 
-// var test = alphaReplay.SerializeEntity<BattleLogic>("BattleLogic");
+var test = alphaReplay.DeserializeEntity<BattleLogic>("BattleLogic");
 
 Console.WriteLine();
 Console.ReadKey();
 
 namespace Test
 {
-	public partial class BattleLogic
-	{
-		public void SetPropertyy(string name, object? value, int[] indexes)
-		{
-			switch (name)
-			{
-				case "State":
-					State = new();
-					break;
-				case "State.missions":
-					State._missions = new();
-					break;
-				case "State.missions.teamsScore":
-					State._missions.teamsScore = new ();
-					break;
-				case "State.missions.teamsScore.#Add":
-					State._missions.teamsScore.Add(new());
-					break;
-				case "State.missions.teamsScore.score" when value is ushort score:
-					State._missions.teamsScore[indexes[0]].score = score;
-					break;
-				default:
-					throw new ArgumentOutOfRangeException(nameof(name), name, null);
-			}
-		}
-	}
-	
 	[SerializableEntity]
 	public partial class BattleLogic
 	{
-		public Statee State { get; set; }
-
-		public List<int> TestList { get; set; }
-		
+		[DataMember(Name = "state")]
+		public State State { get; set; } = null!;
 	}
-	
-	public class Statee
+
+	public class State
 	{
 		[DataMember(Name = "missions")]
-		public Missions _missions { get; set; }
-		
+		public Missions Missions { get; set; } = null!;
 	}
-	
+
 	public class Missions
 	{
-		public List<TeamsScore> teamsScore { get; set; }
-		
+		[DataMember(Name = "teamsScore")]
+		public List<TeamsScore> TeamsScore { get; set; } = null!;
 	}
-	
+
 	public class TeamsScore
 	{
-		public ushort score { get; set; }
-
-		public List<Inner> TestList { get; set; }
-	}
-	
-	public class Inner
-	{
-		public ushort Value { get; set; }
+		[DataMember(Name = "score")]
+		public ushort Score { get; set; }
 	}
 }
-
-
 
 
 //static string GetGroupString(ReplayMessage msg) => msg.MessageGroup switch

@@ -15,10 +15,6 @@ namespace Nodsoft.WowsReplaysUnpack.Tests;
 public sealed class ReplayUnpackerTests
 {
 	private readonly string _sampleFolder = Path.Join(Directory.GetCurrentDirectory(), "Replay-Samples");
-
-	public ReplayUnpackerTests()
-	{ }
-
 	
 	/// <summary>
 	/// Test parsing a working replay using the default controller.
@@ -54,11 +50,11 @@ public sealed class ReplayUnpackerTests
 		
 		ms.Position = 0;
 
-		ReplayUnpackerFactory replayUnpackerFactory = new ServiceCollection()
+		IReplayUnpackerFactory replayUnpackerFactory = new ServiceCollection()
 			.AddLogging(l => l.ClearProviders())
 			.AddWowsReplayUnpacker()
 			.BuildServiceProvider()
-			.GetRequiredService<ReplayUnpackerFactory>();
+			.GetRequiredService<IReplayUnpackerFactory>();
 
 		UnpackedReplay replay = replayUnpackerFactory.GetUnpacker().Unpack(ms);
 		
@@ -100,14 +96,14 @@ public sealed class ReplayUnpackerTests
 		
 		ms.Position = 0;
 
-		ReplayUnpackerFactory replayUnpackerFactory = new ServiceCollection()
+		IReplayUnpackerFactory replayUnpackerFactory = new ServiceCollection()
 			.AddLogging(l => l.ClearProviders())
 			.AddWowsReplayUnpacker(builder =>
 			{
 				builder.AddExtendedData();
 			})
 			.BuildServiceProvider()
-			.GetRequiredService<ReplayUnpackerFactory>();
+			.GetRequiredService<IReplayUnpackerFactory>();
 
 		UnpackedReplay replay = replayUnpackerFactory.GetExtendedDataUnpacker().Unpack(ms);
 		

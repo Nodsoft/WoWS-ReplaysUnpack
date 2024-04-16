@@ -1,5 +1,6 @@
 ﻿using Nodsoft.WowsReplaysUnpack.Core.Entities;
 using Nodsoft.WowsReplaysUnpack.Core.Models;
+using System.Diagnostics;
 
 namespace Nodsoft.WowsReplaysUnpack.EntitySerializer;
 
@@ -35,7 +36,7 @@ public static class EntitySerializer
 		}
 	}
 
-	private static void SetProperty<T>(T instance, string propertyName, object? propertyValue, int[] indexes)
+	private static void SetProperty<T>(T instance, string propertyName, object? propertyValue, int[] indexes, bool listItem = false)
 		where T : class, ISerializableEntity
 	{
 		if (propertyValue is null)
@@ -43,10 +44,13 @@ public static class EntitySerializer
 			return;
 		}
 
-
 		if (propertyValue is FixedDictionary dict)
 		{
-			instance.SetProperty(propertyName, null, []);
+			if (!listItem)
+			{
+				instance.SetProperty(propertyName, null, []);
+			}
+			
 			foreach (KeyValuePair<string, object?> dictProperty in dict)
 			{
 				SetProperty(instance, propertyName + "." + dictProperty.Key, dictProperty.Value, indexes);
@@ -54,12 +58,12 @@ public static class EntitySerializer
 		}
 		else if (propertyValue is FixedList { Count: > 0 } list)
 		{
-			instance.SetProperty(propertyName + ".#Add", null, indexes);
+			instance.SetProperty(propertyName, null, indexes);
 
 			for (int i = 0; i < list.Count; i++)
 			{
-				instance.SetProperty(propertyName, null, indexes);
-				SetProperty(instance, propertyName, list[i], [..indexes, i]);
+				instance.SetProperty(propertyName + ".#Add", null, indexes);
+				SetProperty(instance, propertyName, list[i], [..indexes, i], true);
 			}
 		}
 		else

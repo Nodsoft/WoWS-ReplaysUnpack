@@ -41,7 +41,11 @@ public abstract partial class ReplayControllerBase<T> : IReplayController<T> whe
 	/// <inheritdoc />
 	public T CreateUnpackedReplay(ArenaInfo arenaInfo)
 	{
-		Replay = new() { ArenaInfo = arenaInfo };
+		Replay = new()
+		{
+			ArenaInfo = arenaInfo,
+			ClientVersion = Version.Parse(string.Join('.', arenaInfo.ClientVersionFromExe.Split(',')[..3]))
+		};
 		return Replay;
 	}
 

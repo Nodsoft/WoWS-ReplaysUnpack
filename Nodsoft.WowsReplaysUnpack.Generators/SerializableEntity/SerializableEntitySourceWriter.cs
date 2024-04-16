@@ -19,6 +19,7 @@ internal static class SerializableEntitySourceWriter
 			sb.Append("using ").Append(ns).AppendLine(";");
 		}
 
+		sb.AppendLine("using System.Diagnostics;");
 		sb.AppendLine("using Nodsoft.WowsReplaysUnpack.Core.Entities;");
 		sb.AppendLine();
 		
@@ -66,6 +67,10 @@ internal static class SerializableEntitySourceWriter
 
 			sb.AppendLine($"          break;");
 		}
+
+		sb.AppendLine("      default:")
+			.AppendLine("          Debug.WriteLine($\"Property {name} not found\");")
+			.AppendLine($"          break;");
 
 		sb.AppendLine("    }");
 
