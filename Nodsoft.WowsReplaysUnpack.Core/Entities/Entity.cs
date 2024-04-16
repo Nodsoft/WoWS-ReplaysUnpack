@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Nodsoft.WowsReplaysUnpack.Core.Abstractions;
 using Nodsoft.WowsReplaysUnpack.Core.Definitions;
+using Nodsoft.WowsReplaysUnpack.Core.Exceptions;
 using Nodsoft.WowsReplaysUnpack.Core.Network.Packets;
 using System.Numerics;
 
@@ -194,20 +195,32 @@ public class Entity
 		{
 			subscriptionTarget.CallSubscription(hash, this, packetTime, arguments);
 		}
-		catch (Exception exception) when (exception is ArgumentOutOfRangeException or InvalidCastException)
+		catch (Exception exception)
 		{
-			var expectedParameters = methodDefinition.Arguments.Select(a => new { Type = a.DataType.ClrType, a.Name })
-				.ToArray();
+			if (exception is CveSecurityException)
+			{
+				throw;
+			}
+			
+			if (exception is ArgumentOutOfRangeException or InvalidCastException)
+			{
+				var expectedParameters = methodDefinition.Arguments.Select(a => new { Type = a.DataType.ClrType, a.Name })
+					.ToArray();
 
-			Logger.LogError(exception, """
-			                           Arguments of method definition and method subscription do not match
-			                           Entity Name: {entityName}
-			                           Method Name: {methodName}
-			                           Expected Parameters: {expectedParameters}
-			                           """,
-				Name,
-				methodDefinition.Name,
-				string.Join(", ", expectedParameters.Select(t => $"{t.Type.Name} {t.Name}")));
+				Logger.LogError(exception, """
+				                           Arguments of method definition and method subscription do not match
+				                           Entity Name: {entityName}
+				                           Method Name: {methodName}
+				                           Expected Parameters: {expectedParameters}
+				                           """,
+					Name,
+					methodDefinition.Name,
+					string.Join(", ", expectedParameters.Select(t => $"{t.Type.Name} {t.Name}")));
+			}
+			else
+			{
+				Logger.LogError(exception, "Error when calling method subscription with hash {Hash}", hash);
+			}
 		}
 	}
 
@@ -223,22 +236,34 @@ public class Entity
 		PropertyDefinition propertyDefinition = ClientPropertyDefinitions[index];
 		object? propertyValue = propertyDefinition.GetValue(reader, propertyDefinition.XmlNode);
 		ClientProperties[propertyDefinition.Name] = propertyValue;
-		
+
 		string hash = $"{Name}_{propertyDefinition.Name}";
 		try
 		{
 			subscriptionTarget.PropertyChanged(hash, this, propertyValue);
 		}
-		catch (InvalidCastException exception)
+		catch (Exception exception)
 		{
-			Logger.LogError(exception, """
-			                           Parameter type of property changed subscription does not match
-			                           Entity Name: {entityName}
-			                           Method Name: {methodName}
-			                           Expected Parameter: {expectedParameter}
-			                           """,
-				Name,
-				propertyDefinition.Name, propertyDefinition.DataType.ClrType);
+			if (exception is CveSecurityException)
+			{
+				throw;
+			}
+
+			if (exception is InvalidCastException)
+			{
+				Logger.LogError(exception, """
+				                           Parameter type of property changed subscription does not match
+				                           Entity Name: {entityName}
+				                           Method Name: {methodName}
+				                           Expected Parameter: {expectedParameter}
+				                           """,
+					Name,
+					propertyDefinition.Name, propertyDefinition.DataType.ClrType);
+			}
+			else
+			{
+				Logger.LogError(exception, "Error when calling property subscription with hash {Hash}", hash);
+			}
 		}
 	}
 
