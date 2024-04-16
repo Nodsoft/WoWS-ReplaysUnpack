@@ -8,7 +8,6 @@ using Nodsoft.WowsReplaysUnpack.Benchmark;
 
 BenchmarkRunner.Run<UnpackBenchmark>(DefaultConfig.Instance
 	.WithOptions(ConfigOptions.DisableOptimizationsValidator)
-	.AddJob(Job.Default.WithRuntime(CoreRuntime.Core50))
-	.AddJob(Job.Default.WithRuntime(CoreRuntime.Core60)));
+	.AddJob(Job.Default.WithRuntime(CoreRuntime.Core80)));
 
 Console.ReadLine();
