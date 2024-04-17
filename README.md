@@ -67,7 +67,7 @@ Your custom replay data parser has to implement `IReplayDataParser` or extend `D
 ### ReplayController
 Responsible for handling parsed network packets and filling the UnpackedReplay with information.
 
-Your custom replay controller has to implement `IReplayController` but it is strongly suggested 
+Your custom replay controller has to implement `IReplayController<T>` but it is strongly suggested 
 to use `ReplayControllerBase<T>` where T is your custom replay class.
 Only one controller can be registered for any replay type.
 
