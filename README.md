@@ -26,9 +26,9 @@ Add the service to an `IServiceCollection`
 ```csharp
 services.AddWowsReplayUnpacker();
 ```
-Get the factory with DI, get the `IReplayUnpackerService` from the factory and call the `Unpack` method with either a `Stream` or `byte[]`
+Get the factory, get the unpacker from the factory and call the `Unpack` method with either a `Stream` or `byte[]`
 ```csharp
-ReplayUnpackerFactory replayUnpackerFactory = serviceProvider.GetService<IReplayUnpackerService>();
+ReplayUnpackerFactory replayUnpackerFactory = serviceProvider.GetService<IReplayUnpackerFactory>();
 UnpackedReplay unpackedReplay = replayUnpackerFactory
 	.GetUnpacker()
 	.Unpack(File.OpenRead("my-replay.wowsreplay"));
