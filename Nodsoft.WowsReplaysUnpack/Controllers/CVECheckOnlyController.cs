@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using JetBrains.Annotations;
+using Microsoft.Extensions.Logging;
 using Nodsoft.WowsReplaysUnpack.Core.Definitions;
 using Nodsoft.WowsReplaysUnpack.Core.Entities;
 using Nodsoft.WowsReplaysUnpack.Core.Extensions;
@@ -11,8 +12,11 @@ namespace Nodsoft.WowsReplaysUnpack.Controllers;
 /// Lightweight implementation of a replay controller, designed to analyse a replay for vulnerabilities. <br />
 /// Currently scans for signs of <a href="https://www.cve.org/CVERecord?id=CVE-2022-31265">CVE-2022-31265</a>.
 /// </summary>
-public class CveCheckOnlyController : ReplayControllerBase<CveCheckOnlyController>
+[PublicAPI]
+public class CveCheckOnlyController : ReplayControllerBase<CveCheckOnlyController.CveCheckReplay>
 {
+	public class CveCheckReplay : UnpackedReplay;
+	
 	// ReSharper disable once ContextualLoggerProblem
 	public CveCheckOnlyController(IDefinitionStore definitionStore, ILogger<Entity> entityLogger) : base(definitionStore, entityLogger) { }
 

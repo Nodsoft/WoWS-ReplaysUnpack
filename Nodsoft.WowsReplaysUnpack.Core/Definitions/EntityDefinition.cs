@@ -6,7 +6,7 @@ namespace Nodsoft.WowsReplaysUnpack.Core.Definitions;
 /// <summary>
 /// Defines an entity definition found in a .def file.
 /// </summary>
-public record EntityDefinition : BaseDefinition
+public sealed class EntityDefinition : BaseDefinition
 {
 	private const string ENTITY_DEFS = "entity_defs";
 	
@@ -18,9 +18,21 @@ public record EntityDefinition : BaseDefinition
 	/// </summary>
 	public List<EntityMethodDefinition> ClientMethods { get; private set; } = new();
 
-	public EntityDefinition(Version clientVersion, IDefinitionStore definitionStore, string name) 
+	private EntityDefinition(Version clientVersion, IDefinitionStore definitionStore, string name) 
 		: base(clientVersion, definitionStore, name, ENTITY_DEFS) { }
 
+	public static EntityDefinition Create(Version clientVersion, IDefinitionStore definitionStore, string name)
+	{
+		EntityDefinition definition = new(clientVersion, definitionStore, name);
+		if (definition.XmlDocument is null)
+		{
+			throw new Exception("XmlDocument has to be set");
+		}
+		definition.ParseDefinitionFile(definition.XmlDocument);
+		definition.XmlDocument = null; // Xml does not need to stay in memory
+		return definition;
+	}
+	
 	/// <summary>
 	/// Parses a .def file for the entity definition.
 	/// </summary>
@@ -32,8 +44,8 @@ public record EntityDefinition : BaseDefinition
 		//ParseMethods(xml.SelectSingleNode("BaseMethods"), BaseMethods);
 		ParseMethods(xml.SelectSingleNode("ClientMethods"), ClientMethods);
 
-		CellMethods = CellMethods.OrderBy(m => m.DataSize).ToList();
-		ClientMethods = ClientMethods.OrderBy(m => m.DataSize).ToList();
+		CellMethods = [..CellMethods.OrderBy(m => m.DataSize)];
+		ClientMethods = [..ClientMethods.OrderBy(m => m.DataSize)];
 	}
 
 	private void ParseMethods(XmlNode? methodsNode, ICollection<EntityMethodDefinition> methods)

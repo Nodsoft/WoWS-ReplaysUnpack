@@ -1,6 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Nodsoft.WowsReplaysUnpack.Core.Exceptions;
 using Nodsoft.WowsReplaysUnpack.Core.Models;
 using Nodsoft.WowsReplaysUnpack.ExtendedData;
 using Nodsoft.WowsReplaysUnpack.ExtendedData.Models;
@@ -16,10 +15,6 @@ namespace Nodsoft.WowsReplaysUnpack.Tests;
 public sealed class ReplayUnpackerTests
 {
 	private readonly string _sampleFolder = Path.Join(Directory.GetCurrentDirectory(), "Replay-Samples");
-
-	public ReplayUnpackerTests()
-	{ }
-
 	
 	/// <summary>
 	/// Test parsing a working replay using the default controller.
@@ -39,6 +34,9 @@ public sealed class ReplayUnpackerTests
 		InlineData("12.11.1.wowsreplay"),
 		InlineData("13.0.wowsreplay"),
 		InlineData("13.0.1.wowsreplay"),
+		InlineData("13.1.wowsreplay"),
+		InlineData("13.2.wowsreplay"),
+		InlineData("13.3.wowsreplay"),
 	]
 	public void TestReplay_Pass(string replayPath)
 	{
@@ -52,11 +50,11 @@ public sealed class ReplayUnpackerTests
 		
 		ms.Position = 0;
 
-		ReplayUnpackerFactory replayUnpackerFactory = new ServiceCollection()
+		IReplayUnpackerFactory replayUnpackerFactory = new ServiceCollection()
 			.AddLogging(l => l.ClearProviders())
 			.AddWowsReplayUnpacker()
 			.BuildServiceProvider()
-			.GetRequiredService<ReplayUnpackerFactory>();
+			.GetRequiredService<IReplayUnpackerFactory>();
 
 		UnpackedReplay replay = replayUnpackerFactory.GetUnpacker().Unpack(ms);
 		
@@ -82,6 +80,9 @@ public sealed class ReplayUnpackerTests
 		InlineData("12.11.1.wowsreplay"),
 		InlineData("13.0.wowsreplay"),
 		InlineData("13.0.1.wowsreplay"),
+		InlineData("13.1.wowsreplay"),
+		InlineData("13.2.wowsreplay"),
+		InlineData("13.3.wowsreplay"),
 	]
 	public void TestReplay_ExtendedData_Pass(string replayPath)
 	{
@@ -95,14 +96,14 @@ public sealed class ReplayUnpackerTests
 		
 		ms.Position = 0;
 
-		ReplayUnpackerFactory replayUnpackerFactory = new ServiceCollection()
+		IReplayUnpackerFactory replayUnpackerFactory = new ServiceCollection()
 			.AddLogging(l => l.ClearProviders())
 			.AddWowsReplayUnpacker(builder =>
 			{
 				builder.AddExtendedData();
 			})
 			.BuildServiceProvider()
-			.GetRequiredService<ReplayUnpackerFactory>();
+			.GetRequiredService<IReplayUnpackerFactory>();
 
 		UnpackedReplay replay = replayUnpackerFactory.GetExtendedDataUnpacker().Unpack(ms);
 		

@@ -1,4 +1,5 @@
-﻿using Nodsoft.WowsReplaysUnpack.Core.Entities;
+﻿using JetBrains.Annotations;
+using Nodsoft.WowsReplaysUnpack.Core.Entities;
 using System.Text.Json;
 
 namespace Nodsoft.WowsReplaysUnpack.Core.Models;
@@ -6,18 +7,19 @@ namespace Nodsoft.WowsReplaysUnpack.Core.Models;
 /// <summary>
 /// Represents an unpacked replay file.
 /// </summary>
-public record UnpackedReplay
+[PublicAPI]
+public class UnpackedReplay
 {
 	/// <summary>
 	/// Game client version.
 	/// </summary>
-	public Version ClientVersion { get; }
-	
+	public Version ClientVersion { get; init; } = null!;
+
 	/// <summary>
 	/// Arena info associated to the replay.
 	/// Contains useful information about the battle that took place.
 	/// </summary>
-	public ArenaInfo ArenaInfo { get; }
+	public ArenaInfo ArenaInfo { get; init; } = null!;
 	
 	/// <summary>
 	/// Additional info about the replay.
@@ -38,10 +40,4 @@ public record UnpackedReplay
 	/// Name of the map the replay was played on.
 	/// </summary>
 	public string? MapName { get; set; }
-
-	public UnpackedReplay(ArenaInfo arenaInfo)
-	{
-		ArenaInfo = arenaInfo;
-		ClientVersion = Version.Parse(string.Join('.', ArenaInfo.ClientVersionFromExe.Split(',')[..3]));
-	}
 }

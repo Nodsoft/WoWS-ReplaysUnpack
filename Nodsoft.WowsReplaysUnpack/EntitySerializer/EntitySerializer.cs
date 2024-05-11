@@ -1,95 +1,74 @@
 ﻿using Nodsoft.WowsReplaysUnpack.Core.Entities;
 using Nodsoft.WowsReplaysUnpack.Core.Models;
-using System.Reflection;
-using System.Runtime.Serialization;
+using System.Diagnostics;
 
 namespace Nodsoft.WowsReplaysUnpack.EntitySerializer;
+
 public static class EntitySerializer
 {
-	public static T Deserialize<T>(Entity entity) where T : class
+	public static T Deserialize<T>(Entity entity) where T : class, ISerializableEntity, new()
 	{
-		Dictionary<string, object?> clientProperties = entity.ClientProperties;
-		PropertyInfo[] properties = typeof(T).GetProperties();
-		T obj = Activator.CreateInstance<T>();
-		DeserializeDictionaryProperties(clientProperties, properties, obj);
+		T obj = new();
+		DeserializeDictionaryProperties(entity.ClientProperties, obj);
 		return obj;
 	}
 
-	public static T[] Deserialize<T>(IEnumerable<Entity> entities) where T : class
+	public static T[] Deserialize<T>(IEnumerable<Entity> entities) where T : class, ISerializableEntity, new()
 	{
-	var result = new List<T>();
-		foreach(var entity in entities)
+		List<T> result = new();
+		foreach (Entity entity in entities)
+		{
 			result.Add(Deserialize<T>(entity));
+		}
+
 		return result.ToArray();
 	}
 
-	private static void DeserializeDictionaryProperties(Dictionary<string, object?> entityProperties, PropertyInfo[] propertyInfos, object obj)
+	private static void DeserializeDictionaryProperties<T>(Dictionary<string, object?> entityProperties, T obj)
+		where T : class, ISerializableEntity
 	{
-		Dictionary<string, object?> invariantDictionary = entityProperties.ToDictionary(kv => kv.Key, kv => kv.Value, StringComparer.OrdinalIgnoreCase);
-
-		foreach (PropertyInfo? propertyInfo in propertyInfos)
+		Dictionary<string, object?> invariantDictionary =
+			entityProperties.ToDictionary(kv => kv.Key, kv => kv.Value, StringComparer.OrdinalIgnoreCase);
+		
+		foreach (KeyValuePair<string, object?> property in invariantDictionary)
 		{
-			string propertyName = propertyInfo.Name;
-			DataMemberAttribute? dataMemberAttribute = propertyInfo.GetCustomAttribute<DataMemberAttribute>();
-			if (dataMemberAttribute is { Name.Length: > 0 })
-			{
-				propertyName = dataMemberAttribute.Name;
-			}
-			if (invariantDictionary.TryGetValue(propertyName, out object? value))
-			{
-				DeserializeProperty(value, propertyInfo, obj);
-			}
+			SetProperty(obj, property.Key, property.Value, []);
 		}
 	}
 
-	private static void DeserializeProperty(object? entityPropertyValue, PropertyInfo propertyInfo, object obj)
+	private static void SetProperty<T>(T instance, string propertyName, object? propertyValue, int[] indexes, bool listItem = false)
+		where T : class, ISerializableEntity
 	{
-		if (entityPropertyValue is null)
+		if (propertyValue is null)
 		{
 			return;
 		}
-		else if (entityPropertyValue is FixedDictionary dict)
+
+		if (propertyValue is FixedDictionary dict)
 		{
-			propertyInfo.SetValue(obj, DeserializeFixedDictionary(dict, propertyInfo.PropertyType));
+			if (!listItem)
+			{
+				instance.SetProperty(propertyName, null, []);
+			}
+			
+			foreach (KeyValuePair<string, object?> dictProperty in dict)
+			{
+				SetProperty(instance, propertyName + "." + dictProperty.Key, dictProperty.Value, indexes);
+			}
 		}
-		else if (entityPropertyValue is FixedList list)
+		else if (propertyValue is FixedList { Count: > 0 } list)
 		{
-			propertyInfo.SetValue(obj, DeserializeFixedList(list, propertyInfo.PropertyType.GenericTypeArguments[0]));
+			instance.SetProperty(propertyName, null, indexes);
+
+			for (int i = 0; i < list.Count; i++)
+			{
+				instance.SetProperty(propertyName + ".#Add", null, indexes);
+				SetProperty(instance, propertyName, list[i], [..indexes, i], true);
+			}
 		}
 		else
 		{
-			propertyInfo.SetValue(obj, entityPropertyValue);
+			instance.SetProperty(propertyName, propertyValue, indexes);
 		}
-	}
-
-	private static object? DeserializeFixedDictionary(FixedDictionary dict, Type propertyType)
-	{
-		object propertyObj = Activator.CreateInstance(propertyType)!;
-		DeserializeDictionaryProperties(dict, propertyType.GetProperties(), propertyObj);
-		return propertyObj;
-	}
-
-	private static object? DeserializeFixedList(FixedList list, Type elementType)
-	{
-		Type listType = typeof(List<>).MakeGenericType(elementType);
-		MethodInfo addMethod = listType.GetMethod("Add")!;
-		object values = Activator.CreateInstance(listType)!;
-		foreach (object? item in list)
-		{
-			if (item is FixedDictionary itemDict)
-			{
-				object itemObj = Activator.CreateInstance(elementType)!;
-				addMethod.Invoke(values, new[] { DeserializeFixedDictionary(itemDict, elementType) });
-			}
-			else if (item is FixedList itemList)
-			{
-				throw new NotSupportedException("List in list not supported");
-			}
-			else
-			{
-				addMethod.Invoke(values, new[] { item });
-			}
-		}
-		return values;
 	}
 }

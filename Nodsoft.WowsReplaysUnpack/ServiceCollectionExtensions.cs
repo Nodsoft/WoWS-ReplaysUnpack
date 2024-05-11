@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using JetBrains.Annotations;
+using Microsoft.Extensions.DependencyInjection;
+using Nodsoft.WowsReplaysUnpack.Controllers;
 using Nodsoft.WowsReplaysUnpack.Core.Definitions;
 using Nodsoft.WowsReplaysUnpack.Services;
 
@@ -7,6 +9,7 @@ namespace Nodsoft.WowsReplaysUnpack;
 /// <summary>
 /// Various extension methods for Dependency Injection.
 /// </summary>
+[PublicAPI]
 public static class ServiceCollectionExtensions
 {
 	/// <summary>
@@ -16,7 +19,7 @@ public static class ServiceCollectionExtensions
 	/// </summary>
 	/// <param name="services">The service collection.</param>
 	/// <returns>The service collection.</returns>
-	public static IServiceCollection AddWowsReplayUnpacker(this IServiceCollection services) 
+	public static IServiceCollection AddWowsReplayUnpacker(this IServiceCollection services)
 		=> services.AddWowsReplayUnpacker<DefaultReplayDataParser, DefaultDefinitionStore, AssemblyDefinitionLoader>();
 
 	/// <summary>
@@ -29,7 +32,8 @@ public static class ServiceCollectionExtensions
 	/// <typeparam name="TDefinitionStore">The type of the definition store.</typeparam>
 	/// <typeparam name="TDefinitionLoader">The type of the definition loader.</typeparam>
 	/// <returns>The service collection.</returns>
-	public static IServiceCollection AddWowsReplayUnpacker<TReplayDataParser, TDefinitionStore, TDefinitionLoader>(this IServiceCollection services)
+	public static IServiceCollection AddWowsReplayUnpacker<TReplayDataParser, TDefinitionStore, TDefinitionLoader>(
+		this IServiceCollection services)
 		where TReplayDataParser : class, IReplayDataParser
 		where TDefinitionStore : class, IDefinitionStore
 		where TDefinitionLoader : class, IDefinitionLoader
@@ -41,7 +45,7 @@ public static class ServiceCollectionExtensions
 					.WithDefinitionLoader<TDefinitionLoader>();
 			}
 		);
-	
+
 	/// <summary>
 	/// Builds the WOWS replay data unpacker using the <see cref="ReplayUnpackerFactory"/>,
 	/// and a builder action to configure the unpacker.
@@ -49,13 +53,15 @@ public static class ServiceCollectionExtensions
 	/// <param name="services">The service collection to add the services to.</param>
 	/// <param name="builderAction">The builder action to configure the unpacker.</param>
 	/// <returns>The service collection.</returns>
-	public static IServiceCollection AddWowsReplayUnpacker(this IServiceCollection services, Action<ReplayUnpackerBuilder> builderAction)
+	public static IServiceCollection AddWowsReplayUnpacker(this IServiceCollection services,
+		Action<ReplayUnpackerBuilder> builderAction)
 	{
 		ReplayUnpackerBuilder builder = new(services);
 		builderAction(builder);
 		builder.Build();
 
 		services.AddScoped<ReplayUnpackerFactory>();
+		services.AddScoped<IReplayUnpackerFactory>(s => s.GetRequiredService<ReplayUnpackerFactory>());
 		return services;
 	}
 }

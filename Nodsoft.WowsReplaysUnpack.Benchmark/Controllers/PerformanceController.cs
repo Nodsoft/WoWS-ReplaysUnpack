@@ -7,7 +7,7 @@ using Nodsoft.WowsReplaysUnpack.Core.Network.Packets;
 
 namespace Nodsoft.WowsReplaysUnpack.Benchmark.Controllers
 {
-	internal class PerformanceController : ReplayControllerBase<PerformanceController>
+	internal class PerformanceController : ReplayControllerBase<UnpackedReplay>
 	{
 		public PerformanceController(IDefinitionStore definitionStore, ILogger<Entity> entityLogger) : base(definitionStore, entityLogger) { }
 

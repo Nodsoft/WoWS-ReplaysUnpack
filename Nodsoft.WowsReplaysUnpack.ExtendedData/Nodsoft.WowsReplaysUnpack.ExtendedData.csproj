@@ -2,17 +2,20 @@
     
     <PropertyGroup>
         <OutputType>Library</OutputType>
-        <TargetFramework>net6.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
+        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Razorvine.Pickle" Version="1.4.0" />
+        <PackageReference Include="Razorvine.Pickle" Version="1.5.0" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="../Nodsoft.WowsReplaysUnpack/Nodsoft.WowsReplaysUnpack.csproj" />
+        <ProjectReference Include="..\Nodsoft.WowsReplaysUnpack.Generators\Nodsoft.WowsReplaysUnpack.Generators.csproj"
+                          OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="All"/>
     </ItemGroup>
 
 </Project>

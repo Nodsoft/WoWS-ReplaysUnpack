@@ -1,11 +1,11 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
+﻿using JetBrains.Annotations;
 
 namespace Nodsoft.WowsReplaysUnpack.Core.Network;
 
 /// <summary>
 /// Type definitions and utilities for working with network packets.
 /// </summary>
+[PublicAPI]
 public static class NetworkPacketTypes
 {
 	public static IReadOnlyDictionary<uint, string> BasePackets { get; } = new Dictionary<uint, string>
@@ -46,6 +46,7 @@ public static class NetworkPacketTypes
 	/// Gets the name of a network packet type by its ID.
 	/// </summary>
 	/// <param name="id">The ID of the packet type.</param>
+	/// <param name="version">The game version</param>
 	/// <returns>The name of the packet type.</returns>
 	public static string GetTypeName(uint id, Version version) =>(version switch
 	{

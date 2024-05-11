@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using JetBrains.Annotations;
+using Microsoft.Extensions.Logging;
 using Nodsoft.WowsReplaysUnpack.Core.DataTypes;
 using Nodsoft.WowsReplaysUnpack.Core.Exceptions;
 using Nodsoft.WowsReplaysUnpack.Core.Extensions;
@@ -7,8 +8,9 @@ using System.Xml;
 namespace Nodsoft.WowsReplaysUnpack.Core.Definitions;
 
 /// <summary>
-/// Default implementation of a Definition store, which is used to load definitions from XML files.
+/// Default implementation of a Definition store, which is used to provide the definitions from cache when already loaded
 /// </summary>
+[PublicAPI]
 public class DefaultDefinitionStore : IDefinitionStore
 {
 	/// <summary>
@@ -50,8 +52,7 @@ public class DefaultDefinitionStore : IDefinitionStore
 
 		Logger = logger;
 		DefinitionLoader = definitionLoader;
-
-		_supportedVersions = DefinitionLoader.GetSupportedVersions();
+		_supportedVersions = definitionLoader.GetSupportedVersions();
 	}
 
 	#region EntityDefinitions
@@ -76,7 +77,7 @@ public class DefaultDefinitionStore : IDefinitionStore
 			return definition;
 		}
 
-		definition = new(clientVersion, this, name);
+		definition = EntityDefinition.Create(clientVersion, this, name);
 		EntityDefinitionCache.Add(cacheKey, definition);
 
 		return definition;

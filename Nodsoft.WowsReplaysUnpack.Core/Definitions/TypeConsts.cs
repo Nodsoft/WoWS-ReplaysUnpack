@@ -1,5 +1,4 @@
 ﻿using Nodsoft.WowsReplaysUnpack.Core.DataTypes;
-using System.Collections.Immutable;
 
 namespace Nodsoft.WowsReplaysUnpack.Core.Definitions;
 

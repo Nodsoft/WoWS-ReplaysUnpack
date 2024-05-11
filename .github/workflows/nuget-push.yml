@@ -27,7 +27,8 @@ jobs:
         project: [ 
           { name: "Main", path: "Nodsoft.WowsReplaysUnpack/Nodsoft.WowsReplaysUnpack.csproj" },
           { name: "Core", path: "Nodsoft.WowsReplaysUnpack.Core/Nodsoft.WowsReplaysUnpack.Core.csproj" },
-          { name: "ExtendedData", path: "Nodsoft.WowsReplaysUnpack.ExtendedData/Nodsoft.WowsReplaysUnpack.ExtendedData.csproj" }
+          { name: "ExtendedData", path: "Nodsoft.WowsReplaysUnpack.ExtendedData/Nodsoft.WowsReplaysUnpack.ExtendedData.csproj" },
+          { name: "Generators", path: "Nodsoft.WowsReplaysUnpack.Generators/Nodsoft.WowsReplaysUnpack.Generators.csproj" }
         ]
         
         # Sources to publish to
@@ -44,7 +45,7 @@ jobs:
       - name: Setup dotnet
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: 6.0.x
+          dotnet-version: 8.0.x
 
       - uses: dotnet/nbgv@master
         id: nbgv
