@@ -99,7 +99,7 @@ public sealed class ArenaInfo
 	public string GameType { get; }
 
 	/// <summary>The date when the battle started. In format 'dd.MM.yyyy HH:mm:ss'.</summary>
-	[JsonConverter(typeof(ReplayDateTimeJsonConverter))]
+	[JsonConverter(typeof(ReplayFileDateTimeJsonConverter))]
 	public DateTime DateTime { get; }
 
 	/// <summary>The name of the player.</summary>

@@ -1,7 +1,8 @@
-﻿using Nodsoft.WowsReplaysUnpack.Core;
+using Nodsoft.WowsReplaysUnpack.Core;
 using Nodsoft.WowsReplaysUnpack.Core.Abstractions;
 using Nodsoft.WowsReplaysUnpack.Core.Exceptions;
 using Nodsoft.WowsReplaysUnpack.Core.Extensions;
+using Nodsoft.WowsReplaysUnpack.Core.Json;
 using Nodsoft.WowsReplaysUnpack.Core.Models;
 using Nodsoft.WowsReplaysUnpack.Core.Network.Packets;
 using System.Diagnostics;
@@ -205,6 +206,8 @@ public class ReplayUnpackerService
 
 	protected static readonly JsonSerializerOptions JsonSerializerOptions = new()
 	{
-		PropertyNameCaseInsensitive = true, TypeInfoResolver = UnpackerJsonSerializerContext.Default
+		Converters = { new ReplayFileDateTimeJsonConverter() },
+		PropertyNameCaseInsensitive = true, 
+		TypeInfoResolver = UnpackerJsonSerializerContext.Default
 	};
 }
