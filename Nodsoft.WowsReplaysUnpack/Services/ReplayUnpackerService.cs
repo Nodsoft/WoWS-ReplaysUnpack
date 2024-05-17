@@ -1,4 +1,4 @@
-using Nodsoft.WowsReplaysUnpack.Core;
+﻿using Nodsoft.WowsReplaysUnpack.Core;
 using Nodsoft.WowsReplaysUnpack.Core.Abstractions;
 using Nodsoft.WowsReplaysUnpack.Core.Exceptions;
 using Nodsoft.WowsReplaysUnpack.Core.Extensions;
@@ -107,7 +107,7 @@ public sealed class ReplayUnpackerService<TReplay> : ReplayUnpackerService, IRep
 		return replay;
 	}
 
-	private void ReadExtraJsonBlocks(UnpackedReplay replay, BinaryReader binaryReader, int jsonBlockCount)
+	private static void ReadExtraJsonBlocks(UnpackedReplay replay, BinaryReader binaryReader, int jsonBlockCount)
 	{
 		if (jsonBlockCount <= 1)
 		{
@@ -123,7 +123,7 @@ public sealed class ReplayUnpackerService<TReplay> : ReplayUnpackerService, IRep
 		}
 	}
 
-	private T ReadJsonBlock<T>(BinaryReader binaryReader)
+	private static T ReadJsonBlock<T>(BinaryReader binaryReader)
 	{
 		int blockSize = binaryReader.ReadInt32();
 		// If empty and T is nullable, return null
@@ -198,10 +198,8 @@ public sealed class ReplayUnpackerService<TReplay> : ReplayUnpackerService, IRep
 /// </summary>
 public class ReplayUnpackerService
 {
-	private static readonly byte[] BlowfishKey = "\x29\xB7\xC9\x09\x38\x3F\x84\x88\xFA\x98\xEC\x4E\x13\x19\x79\xFB"
-		.Select(Convert.ToByte).ToArray();
-
-	protected static readonly byte[] ReplaySignature = "\x12\x32\x34\x11"u8.ToArray();
+	private static readonly byte[] BlowfishKey = [0x29, 0xB7, 0xC9, 0x09, 0x38, 0x3F, 0x84, 0x88, 0xFA, 0x98, 0xEC, 0x4E, 0x13, 0x19, 0x79, 0xFB];
+	protected static readonly byte[] ReplaySignature = [0x12, 0x32, 0x34, 0x11];
 	protected static readonly Blowfish Blowfish = new(BlowfishKey);
 
 	protected static readonly JsonSerializerOptions JsonSerializerOptions = new()
