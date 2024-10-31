@@ -50,6 +50,7 @@ public sealed class ReplayUnpackerTests
 		InlineData("13.7.wowsreplay"),
 		InlineData("13.8.wowsreplay"),
 		InlineData("13.9.wowsreplay"),
+		InlineData("13.10.wowsreplay"),
 	]
 	public void TestReplay_Pass(string replayPath)
 	{
@@ -104,6 +105,7 @@ public sealed class ReplayUnpackerTests
 		InlineData("13.7.wowsreplay"),
 		InlineData("13.8.wowsreplay"),
 		InlineData("13.9.wowsreplay"),
+		InlineData("13.10.wowsreplay"),
 	]
 	public void TestReplay_ExtendedData_Pass(string replayPath)
 	{
