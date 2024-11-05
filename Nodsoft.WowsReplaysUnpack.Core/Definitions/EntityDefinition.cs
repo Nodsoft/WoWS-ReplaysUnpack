@@ -9,7 +9,7 @@ namespace Nodsoft.WowsReplaysUnpack.Core.Definitions;
 public sealed class EntityDefinition : BaseDefinition
 {
 	private const string ENTITY_DEFS = "entity_defs";
-	
+
 	private List<EntityMethodDefinition> CellMethods { get; set; } = new();
 	// public List<EntityMethodDefinition> BaseMethods { get; set; } = new();
 
@@ -18,8 +18,10 @@ public sealed class EntityDefinition : BaseDefinition
 	/// </summary>
 	public List<EntityMethodDefinition> ClientMethods { get; private set; } = new();
 
-	private EntityDefinition(Version clientVersion, IDefinitionStore definitionStore, string name) 
-		: base(clientVersion, definitionStore, name, ENTITY_DEFS) { }
+	private EntityDefinition(Version clientVersion, IDefinitionStore definitionStore, string name)
+		: base(clientVersion, definitionStore, name, ENTITY_DEFS)
+	{
+	}
 
 	public static EntityDefinition Create(Version clientVersion, IDefinitionStore definitionStore, string name)
 	{
@@ -28,11 +30,12 @@ public sealed class EntityDefinition : BaseDefinition
 		{
 			throw new Exception("XmlDocument has to be set");
 		}
+
 		definition.ParseDefinitionFile(definition.XmlDocument);
 		definition.XmlDocument = null; // Xml does not need to stay in memory
 		return definition;
 	}
-	
+
 	/// <summary>
 	/// Parses a .def file for the entity definition.
 	/// </summary>
@@ -57,6 +60,8 @@ public sealed class EntityDefinition : BaseDefinition
 
 		foreach (XmlNode node in methodsNode.ChildNodes())
 		{
+			if (node is not XmlElement)
+				continue;
 			methods.Add(new(ClientVersion, DefinitionStore, node));
 		}
 	}
