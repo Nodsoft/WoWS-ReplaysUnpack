@@ -105,7 +105,9 @@ public sealed class ReplayUnpackerTests
 		yield return ["13.9.wowsreplay"];
 		yield return ["13.10.wowsreplay"];
 		yield return ["13.11.wowsreplay"];
-		yield return ["14.0.wowsreplay"];		
+		yield return ["14.0.wowsreplay"];
+		yield return ["14.1.wowsreplay"];
+
 		// Special edge cases
 		yield return ["Spike1.wowsreplay"];
 	}
