@@ -120,6 +120,7 @@ public sealed class ReplayUnpackerTests
 		yield return ["14.11.wowsreplay"];
 		yield return ["15.0.wowsreplay"];
 		yield return ["15.1.wowsreplay"];
+		yield return ["15.2.wowsreplay"];
 
 
 
