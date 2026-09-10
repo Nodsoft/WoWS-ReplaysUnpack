@@ -29,14 +29,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Projects to publish
-        project: [ 
-          { name: "Main", path: "Nodsoft.WowsReplaysUnpack/Nodsoft.WowsReplaysUnpack.csproj" },
-          { name: "Core", path: "Nodsoft.WowsReplaysUnpack.Core/Nodsoft.WowsReplaysUnpack.Core.csproj" },
-          { name: "ExtendedData", path: "Nodsoft.WowsReplaysUnpack.ExtendedData/Nodsoft.WowsReplaysUnpack.ExtendedData.csproj" },
-          { name: "Generators", path: "Nodsoft.WowsReplaysUnpack.Generators/Nodsoft.WowsReplaysUnpack.Generators.csproj" }
-        ]
-        
         # Sources to publish to
         nuget: [
           { name: "NuGet", source: "https://api.nuget.org/v3/index.json", keyname: "NUGET_TOKEN" },
