@@ -1,5 +1,11 @@
 name: Publish NuGet packages
 
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+  attestations: write
+
 # Controls when the action will run. 
 on:
   push:
@@ -23,75 +29,61 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Projects to publish
-        project: [ 
-          { name: "Main", path: "Nodsoft.WowsReplaysUnpack/Nodsoft.WowsReplaysUnpack.csproj" },
-          { name: "Core", path: "Nodsoft.WowsReplaysUnpack.Core/Nodsoft.WowsReplaysUnpack.Core.csproj" },
-          { name: "ExtendedData", path: "Nodsoft.WowsReplaysUnpack.ExtendedData/Nodsoft.WowsReplaysUnpack.ExtendedData.csproj" },
-          { name: "Generators", path: "Nodsoft.WowsReplaysUnpack.Generators/Nodsoft.WowsReplaysUnpack.Generators.csproj" }
-        ]
-        
         # Sources to publish to
-        nuget: [ 
-          { name: "NuGet", source: "https://api.nuget.org", keyname: "NUGET_TOKEN" }, 
-          { name: "GitHub Packages", source: "https://nuget.pkg.github.com/Nodsoft", keyname: "GITHUB_TOKEN" } 
+        nuget: [
+          { name: "NuGet", source: "https://api.nuget.org/v3/index.json", keyname: "NUGET_TOKEN" },
+          { name: "GitHub Packages", source: "https://nuget.pkg.github.com/Nodsoft", keyname: "GITHUB_TOKEN" }
         ]
         
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # avoid shallow clone so nbgv can do its work.
 
       - name: Setup dotnet
-        uses: actions/setup-dotnet@v1
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 8.0.x
 
-      - uses: dotnet/nbgv@master
+      - uses: dotnet/nbgv@v0.5.2
         id: nbgv
 
       - name: Restore dependencies
         run: dotnet restore
 
       - name: Build
-        run: dotnet build
+        run: dotnet build -c Release --no-restore
+
+      - name: Package
+        run: dotnet pack -c Release --no-build --include-symbols
+
 
       - id: is-public-release
-        uses: ASzc/change-string-case-action@v2
+        uses: ASzc/change-string-case-action@v8
         with:
           string: ${{ steps.nbgv.outputs.PublicRelease }}
 
-      # Publish
-      - name: Build, Pack & Publish ${{ matrix.project.name }} to ${{ matrix.nuget.name }}
-        id: publish_nuget
-        uses: Rebel028/publish-nuget@v2.7.0
+      - name: Attest build provenance for .(s)nupkgs
+        uses: actions/attest-build-provenance@v4
+        # Only once per package: take nuget provider
+        if: matrix.nuget.name == 'NuGet'
         with:
-          # Filepath of the project to be packaged, relative to root of repository
-          PROJECT_FILE_PATH: ${{ matrix.project.path }}
-          
-          # NuGet package id, used for version detection & defaults to project name
-          # PACKAGE_NAME: Core
-          
-          # Filepath with version info, relative to root of repository & defaults to PROJECT_FILE_PATH
-          VERSION_FILE_PATH: Directory.Build.props
+          subject-path: "**/Release/*nupkg"
 
-          # Regex pattern to extract version info in a capturing group
-          # VERSION_REGEX: ^\s*<Version>(.*)<\/Version>\s*$
-          
-          # Useful with external providers like Nerdbank.GitVersioning, ignores VERSION_FILE_PATH & VERSION_REGEX
-          VERSION_STATIC: ${{ steps.nbgv.outputs.NuGetPackageVersion }}
+      # Publish
+      - name: NuGet login (OIDC)
+        uses: NuGet/login@v1.2.0
+        if: matrix.nuget.name == 'NuGet'
+        id: nuget_login
+        with:
+          user: ${{ secrets.NUGET_USER }}
 
-          # Flag to toggle git tagging, enabled by default
-          TAG_COMMIT: ${{ steps.is-public-release.outputs.lowercase }}
 
-          # Format of the git tag, [*] gets replaced with actual version
-          TAG_FORMAT: v${{ steps.nbgv.outputs.MajorMinorVersion }}
-
-          # API key to authenticate with NuGet server
-          NUGET_KEY: ${{ secrets[matrix.nuget.keyname] }}
-
-          # NuGet server uri hosting the packages, defaults to https://api.nuget.org
-          NUGET_SOURCE: ${{ matrix.nuget.source }}
-
-          # Flag to toggle pushing symbols along with nuget package to the server, disabled by default
-          # INCLUDE_SYMBOLS: false
+      - name: Publish packages to ${{ matrix.nuget.name }}
+        run: |
+          dotnet nuget push "**/Release/*.nupkg" \
+          --source "${{ matrix.nuget.source }}" \
+          --symbol-source "${{ matrix.nuget.source }}" \
+          --api-key "${{ matrix.nuget.name == 'NuGet' && steps.nuget_login.outputs.NUGET_API_KEY || secrets[matrix.nuget.keyname] }}" \
+          --symbol-api-key "${{ matrix.nuget.name == 'NuGet' && steps.nuget_login.outputs.NUGET_API_KEY || secrets[matrix.nuget.keyname] }}" \
+          --skip-duplicate
