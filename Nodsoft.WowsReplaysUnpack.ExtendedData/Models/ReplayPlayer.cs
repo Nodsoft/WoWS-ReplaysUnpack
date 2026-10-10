@@ -84,6 +84,7 @@ public record ReplayPlayer
 	public Hashtable? ShipComponents { get; set; }
 
 	public string ShipConfigDump { get; set; } = string.Empty;
+	public uint ShipFrags { get; set; }
 
 	public uint ShipId { get; set; }
 

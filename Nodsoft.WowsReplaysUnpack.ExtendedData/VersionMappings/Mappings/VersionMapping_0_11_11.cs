@@ -5,6 +5,46 @@ namespace Nodsoft.WowsReplaysUnpack.ExtendedData.VersionMappings.Mappings;
 // ReSharper disable once InconsistentNaming
 public class VersionMapping_0_11_11 : DefaultVersionMapping
 {
+	// {0: 'accountDBID',
+	// 1: 'antiAbuseEnabled',
+	// 2: 'avatarId',
+	// 3: 'camouflageInfo', 
+	// 	4: 'clanColor',
+	// 5: 'clanID',
+	// 6: 'clanTag',
+	// 7: 'crewParams',
+	// 8: 'dogTag', 
+	// 	9: 'fragsCount',
+	// 10: 'friendlyFireEnabled',
+	// 11: 'id',
+	// 12: 'invitationsEnabled', 
+	// 	13: 'isAbuser',
+	// 14: 'isAlive',
+	// 15: 'isBot',
+	// 16: 'isClientLoaded',
+	// 17: 'isConnected', 
+	// 	18: 'isHidden',
+	// 19: 'isLeaver',
+	// 20: 'isPreBattleOwner',
+	// 21: 'isTShooter', 
+	// 	22: 'keyTargetMarkers',
+	// 23: 'killedBuildingsCount',
+	// 24: 'maxHealth',
+	// 25: 'name', 
+	// 	26: 'playerMode',
+	// 27: 'preBattleIdOnStart',
+	// 28: 'preBattleSign',
+	// 29: 'prebattleId', 
+	// 	30: 'realm',
+	// 31: 'shipComponents',
+	// 32: 'shipConfigDump',
+	// 33: 'shipFrags', 
+	// 	34: 'shipId',
+	// 35: 'shipParamsId',
+	// 36: 'skinId',
+	// 37: 'teamId',
+	// 38: 'ttkStatus'}
+	
 	public override Version? Version { get; } = new(0, 11, 11);
 
 	public override Dictionary<int, string> ReplayPlayerPropertyMappings => new()
