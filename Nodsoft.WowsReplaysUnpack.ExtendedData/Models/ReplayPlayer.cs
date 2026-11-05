@@ -98,6 +98,9 @@ public record ReplayPlayer
 
 	public Lazy<ShipData?> ShipData { get; }
 	
+	// For newly added fields we don't know the name yet
+	public string? UnknwonField1 { get; set; }
+	
 	
 	/*
 	 * FIXME: This is a hack to get replays to parse correctly post 0.11.11+.

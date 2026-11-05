@@ -14,7 +14,7 @@ public class BrokenReplayTests
 		services.AddWowsReplayUnpacker(b => b.AddExtendedData());
 		var sp = services.BuildServiceProvider();
 
-		var path = "/mnt/data/Downloads/20261010_150030_PRSC310-Petropavlovsk_16_OC_bees_to_honey.wowsreplay";
+		var path = "/mnt/data/Downloads/20261105_132839_PFSD110-Kleber_40_Okinawa.wowsreplay";
 		// var path =
 		// 	@"E:\Downloads\5915c052ee734ef68f0b6b0065a0fe52-20241027_003342_PHSD509-Groningen_45_Zigzag.wowsreplay";
 		var fs = File.OpenRead(path);

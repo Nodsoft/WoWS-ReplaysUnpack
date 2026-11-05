@@ -16,8 +16,10 @@ namespace Nodsoft.WowsReplaysUnpack.ExtendedData;
 public class ExtendedDataController : ExtendedDataController<ExtendedDataReplay>
 {
 	public ExtendedDataController(VersionMappingFactory versionMappingFactory,
-		IDefinitionStore definitionStore, ILogger<Entity> entityLogger) : base(versionMappingFactory,
-		definitionStore, entityLogger)
+		IDefinitionStore definitionStore,
+		ILogger<ExtendedDataController> logger,
+		ILogger<Entity> entityLogger) : base(versionMappingFactory,
+		definitionStore, logger, entityLogger)
 	{
 	}
 }
@@ -28,14 +30,20 @@ public partial class ExtendedDataController<TReplay> : ReplayControllerBase<TRep
 	where TReplay : ExtendedDataReplay, new()
 {
 	private readonly VersionMappingFactory _versionMappingFactory;
+	private readonly ILogger _logger;
 
 	static ExtendedDataController() =>
 		Unpickler.registerConstructor("CamouflageInfo", "CamouflageInfo", new CamouflageInfo());
 
-	public ExtendedDataController(VersionMappingFactory versionMappingFactory, IDefinitionStore definitionStore,
+	public ExtendedDataController(VersionMappingFactory versionMappingFactory,
+		IDefinitionStore definitionStore,
+		ILogger logger,
 		ILogger<Entity> entityLogger)
 		: base(definitionStore, entityLogger)
-		=> _versionMappingFactory = versionMappingFactory;
+	{
+		_versionMappingFactory = versionMappingFactory;
+		_logger = logger;
+	}
 
 	/// <summary>
 	/// Triggered when a chat message is parsed from the replay.
@@ -84,15 +92,21 @@ public partial class ExtendedDataController<TReplay> : ReplayControllerBase<TRep
 		foreach (object[] propertyArray in properties)
 		{
 			string? propertyName = mapping.ReplayPlayerPropertyMappings.GetValueOrDefault((int)propertyArray[0]);
-
 			if (string.IsNullOrEmpty(propertyName))
 			{
 				continue;
 			}
 
-			PropertyInfo? propertyInfo = ReplayPlayer.PropertyInfos.SingleOrDefault(x => x.Name == propertyName);
-			propertyInfo?.SetValue(replayPlayer, Convert.ChangeType(propertyArray[1], propertyInfo.PropertyType),
-				null);
+			try
+			{
+				PropertyInfo? propertyInfo = ReplayPlayer.PropertyInfos.SingleOrDefault(x => x.Name == propertyName);
+				propertyInfo?.SetValue(replayPlayer, Convert.ChangeType(propertyArray[1], propertyInfo.PropertyType),
+					null);
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Error while getting player property {PropertyName}", propertyName);
+			}
 		}
 
 		Replay.ReplayPlayers.Add(replayPlayer);
